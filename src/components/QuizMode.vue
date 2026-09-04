@@ -116,7 +116,7 @@ function selectOption(index) {
 }
 
 function nextQuestion() {
-  if (currentQuestionIndex.value < questions.length - 1) {
+  if (currentQuestionIndex.value < questions.value.length - 1) {
     currentQuestionIndex.value += 1
     selectedOptionIndex.value = null
     isAnswered.value = false
@@ -413,7 +413,7 @@ const resultEvaluation = computed(() => {
           </div>
 
           <button id="btn-next-question" class="next-question-btn" @click="nextQuestion">
-            <span>{{ currentQuestionIndex < questions.length - 1 ? 'Câu tiếp theo' : 'Xem kết quả' }}</span>
+            <span>{{ currentQuestionIndex < questions.value.length - 1 ? 'Câu tiếp theo' : 'Xem kết quả' }}</span>
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
               <polyline points="9 18 15 12 9 6"/>
             </svg>
@@ -437,11 +437,11 @@ const resultEvaluation = computed(() => {
         <!-- Stats Grid -->
         <div class="result-stats">
           <div class="res-stat-box">
-            <span class="res-stat-val text-success">{{ questions.length - incorrectAnswers.length }} / {{ questions.length }}</span>
+            <span class="res-stat-val text-success">{{ questions.value.length - incorrectAnswers.length }} / {{ questions.value.length }}</span>
             <span class="res-stat-label">Số câu đúng</span>
           </div>
           <div class="res-stat-box">
-            <span class="res-stat-val text-primary">{{ Math.round(((questions.length - incorrectAnswers.length) / questions.length) * 100) }}%</span>
+            <span class="res-stat-val text-primary">{{ Math.round(((questions.value.length - incorrectAnswers.length) / questions.value.length) * 100) }}%</span>
             <span class="res-stat-label">Độ chính xác</span>
           </div>
           <div class="res-stat-box">
