@@ -40,19 +40,21 @@ const normalizedAnswer = computed(() => normalizeText(answer.value))
 const isCurrentMastered = computed(() => currentWord.value ? props.masteredIds.includes(currentWord.value.id) : false)
 
 function normalizeText(value) {
-  return value.toLowerCase().trim().replace(/[’‘]/g, "'").replace(/[-–—]/g, ' ').replace(/\s+/g, ' ')
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/[’‘]/g, "'")
+    .replace(/[-–—]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
-function acceptedAnswers(word) {
-  const rawAnswers = word.split('/').map((item) => item.trim())
-  const answers = new Set(rawAnswers.map(normalizeText))
-  rawAnswers.forEach((item) => {
-    if (item.includes('(s)')) {
-      answers.add(normalizeText(item.replace('(s)', '')))
-      answers.add(normalizeText(item.replace('(s)', 's')))
-    }
-  })
-  return answers
+function acceptedMeanings(meaning) {
+  const withoutNotes = meaning.replace(/\([^)]*\)/g, ' ')
+  const alternatives = withoutNotes.split(/[,;/]+/).map(normalizeText).filter(Boolean)
+  return new Set(alternatives)
 }
 
 function resetAnswer() {
@@ -99,7 +101,7 @@ function scheduleReview(card) {
 
 function checkAnswer() {
   if (!currentWord.value || !normalizedAnswer.value || answerState.value !== 'idle') return
-  const isCorrect = acceptedAnswers(currentWord.value.word).has(normalizedAnswer.value)
+  const isCorrect = acceptedMeanings(currentWord.value.meaning).has(normalizedAnswer.value)
   if (isCorrect) {
     answerState.value = 'correct'
     if (!currentWord.value.isReview && !currentWord.value.isCompleted) {
@@ -206,38 +208,38 @@ onUnmounted(() => {
 
       <div class="instruction">
         <span class="instruction-icon">✦</span>
-        <div><h1>Từ tiếng Anh là gì?</h1><p>Nhập từ phù hợp với nghĩa tiếng Việt bên dưới.</p></div>
+        <div><h1>Từ này có nghĩa là gì?</h1><p>Nhập một nghĩa tiếng Việt phù hợp.</p></div>
       </div>
 
       <button class="flashcard" :class="{ flipped: isFlipped }" type="button" @click="flipCard">
         <span class="card-inner">
           <span class="card-face card-front">
-            <span class="card-header"><span class="pos-badge">{{ currentWord.type }}</span><span class="face-label">TIẾNG VIỆT</span></span>
-            <strong class="meaning-text">{{ currentWord.meaning }}</strong>
-            <span class="flip-hint">Chạm để xem đáp án</span>
-          </span>
-          <span class="card-face card-back">
             <span class="card-header"><span class="pos-badge">{{ currentWord.type }}</span><span class="face-label">ENGLISH</span></span>
             <span class="answer-content">
               <strong class="word-text">{{ currentWord.word }}</strong>
               <span class="ipa-row"><span>{{ currentWord.ipa }}</span><span class="audio-btn" :class="{ speaking: isSpeaking }" aria-hidden="true">🔊</span></span>
             </span>
+            <span class="flip-hint">Chạm để xem đáp án</span>
+          </span>
+          <span class="card-face card-back">
+            <span class="card-header"><span class="pos-badge">{{ currentWord.type }}</span><span class="face-label">TIẾNG VIỆT</span></span>
+            <strong class="meaning-text">{{ currentWord.meaning }}</strong>
             <span class="flip-hint">Chạm để quay lại</span>
           </span>
         </span>
       </button>
 
       <form class="answer-form" @submit.prevent="checkAnswer">
-        <label for="flashcard-answer">Nhập từ hoặc cụm từ tiếng Anh</label>
+        <label for="flashcard-answer">Nhập nghĩa tiếng Việt</label>
         <div class="answer-row">
-          <input id="flashcard-answer" ref="answerInput" v-model="answer" type="text" inputmode="text" enterkeyhint="next" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Nhập đáp án..." :readonly="answerState !== 'idle'" :class="{ 'input-correct': answerState === 'correct', 'input-incorrect': answerState === 'incorrect' }" />
+          <input id="flashcard-answer" ref="answerInput" v-model="answer" type="text" inputmode="text" enterkeyhint="next" autocomplete="off" spellcheck="false" placeholder="Ví dụ: cẩn thận" :readonly="answerState !== 'idle'" :class="{ 'input-correct': answerState === 'correct', 'input-incorrect': answerState === 'incorrect' }" />
           <button v-if="answerState === 'idle'" class="check-btn" type="submit" :disabled="!normalizedAnswer">Kiểm tra</button>
           <button v-else-if="answerState === 'incorrect'" class="next-btn" type="button" @click="nextCard">{{ currentIndex >= cards.length - 1 ? 'Xem kết quả' : 'Tiếp theo →' }}</button>
           <span v-else class="auto-status">Đang chuyển…</span>
         </div>
         <div class="feedback" aria-live="polite">
           <p v-if="answerState === 'correct'" class="feedback-correct"><span>✓</span> Chính xác!</p>
-          <p v-else-if="answerState === 'incorrect'" class="feedback-incorrect"><span>×</span> Chưa đúng. Đáp án là <strong>{{ currentWord.word }}</strong>.</p>
+          <p v-else-if="answerState === 'incorrect'" class="feedback-incorrect"><span>×</span> Chưa đúng. Nghĩa của từ là <strong>{{ currentWord.meaning }}</strong>.</p>
           <p v-else>Nhấn Enter hoặc nút “Kiểm tra” để trả lời.</p>
         </div>
       </form>
