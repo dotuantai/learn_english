@@ -1,0 +1,366 @@
+[
+  {
+    "id": 1,
+    "word": "careful",
+    "type": "adj.",
+    "ipa": "/ˈkeəfl/",
+    "meaning": "Cẩn thận, thận trọng"
+  },
+  {
+    "id": 2,
+    "word": "carefully",
+    "type": "adv.",
+    "ipa": "/ˈkeəfəli/",
+    "meaning": "Một cách cẩn thận, chu đáo"
+  },
+  {
+    "id": 3,
+    "word": "proactive",
+    "type": "adj.",
+    "ipa": "/prəʊˈæktɪv/",
+    "meaning": "Chủ động"
+  },
+  {
+    "id": 4,
+    "word": "health",
+    "type": "n.",
+    "ipa": "/helθ/",
+    "meaning": "Sức khỏe"
+  },
+  {
+    "id": 5,
+    "word": "health issues",
+    "type": "n. phr.",
+    "ipa": "/helθ ˈɪʃuːz/",
+    "meaning": "Các vấn đề về sức khỏe"
+  },
+  {
+    "id": 6,
+    "word": "detecting",
+    "type": "v-ing",
+    "ipa": "/dɪˈtektɪŋ/",
+    "meaning": "Phát hiện, nhận biết, dò tìm"
+  },
+  {
+    "id": 7,
+    "word": "symptoms",
+    "type": "n. (pl.)",
+    "ipa": "/ˈsɪmptəmz/",
+    "meaning": "Các triệu chứng (bệnh)"
+  },
+  {
+    "id": 8,
+    "word": "any symptoms",
+    "type": "n. phr.",
+    "ipa": "/ˈeni ˈsɪmptəmz/",
+    "meaning": "Bất kỳ triệu chứng nào"
+  },
+  {
+    "id": 9,
+    "word": "early",
+    "type": "adv./adj.",
+    "ipa": "/ˈɜːli/",
+    "meaning": "Sớm"
+  },
+  {
+    "id": 10,
+    "word": "treats",
+    "type": "v.",
+    "ipa": "/triːts/",
+    "meaning": "Chữa trị, điều trị, đối xử"
+  },
+  {
+    "id": 11,
+    "word": "treated",
+    "type": "v-ed/adj.",
+    "ipa": "/ˈtriːtɪd/",
+    "meaning": "Được điều trị / Đã chữa trị"
+  },
+  {
+    "id": 12,
+    "word": "the treatment process",
+    "type": "n. phr.",
+    "ipa": "/ðə ˈtriːtmənt ˈprəʊses/",
+    "meaning": "Quá trình / Quy trình điều trị"
+  },
+  {
+    "id": 13,
+    "word": "the prescribed treatment plan",
+    "type": "n. phr.",
+    "ipa": "/ðə prɪˈskraɪbd ˈtriːtmənt plæn/",
+    "meaning": "Kế hoạch điều trị đã được kê đơn/chỉ định"
+  },
+  {
+    "id": 14,
+    "word": "further treatment",
+    "type": "n. phr.",
+    "ipa": "/ˈfɜːðə(r) ˈtriːtmənt/",
+    "meaning": "Việc điều trị chuyên sâu/tiếp theo"
+  },
+  {
+    "id": 15,
+    "word": "gentle",
+    "type": "adj.",
+    "ipa": "/ˈdʒentl/",
+    "meaning": "Nhẹ nhàng, dịu dàng"
+  },
+  {
+    "id": 16,
+    "word": "gently",
+    "type": "adv.",
+    "ipa": "/ˈdʒentli/",
+    "meaning": "Một cách nhẹ nhàng, êm ái"
+  },
+  {
+    "id": 17,
+    "word": "painkiller(s)",
+    "type": "n.",
+    "ipa": "/ˈpeɪnkɪlə(r)z/",
+    "meaning": "Thuốc giảm đau"
+  },
+  {
+    "id": 18,
+    "word": "a prescription for painkillers",
+    "type": "n. phr.",
+    "ipa": "/ə prɪˈskrɪpʃn fɔː(r) ˈpeɪnkɪləz/",
+    "meaning": "Đơn thuốc giảm đau"
+  },
+  {
+    "id": 19,
+    "word": "antibiotics",
+    "type": "n. (pl.)",
+    "ipa": "/ˌæntibaɪˈɒtɪks/",
+    "meaning": "Thuốc kháng sinh"
+  },
+  {
+    "id": 20,
+    "word": "prescribed",
+    "type": "v-ed/adj.",
+    "ipa": "/prɪˈskraɪbd/",
+    "meaning": "Được kê đơn, được chỉ định"
+  },
+  {
+    "id": 21,
+    "word": "a prescription",
+    "type": "n.",
+    "ipa": "/ə prɪˈskrɪpʃn/",
+    "meaning": "Đơn thuốc, toa thuốc"
+  },
+  {
+    "id": 22,
+    "word": "over-the-counter medicine",
+    "type": "n. phr.",
+    "ipa": "/ˌəʊvə ðə ˈkaʊntə(r) ˈmedsn/",
+    "meaning": "Thuốc không cần kê đơn (mua ở quầy)"
+  },
+  {
+    "id": 23,
+    "word": "my medications",
+    "type": "n. phr.",
+    "ipa": "/maɪ ˌmedɪˈkeɪʃnz/",
+    "meaning": "Thuốc men của tôi"
+  },
+  {
+    "id": 24,
+    "word": "severe",
+    "type": "adj.",
+    "ipa": "/sɪˈvɪə(r)/",
+    "meaning": "Nghiêm trọng, nặng, dữ dội"
+  },
+  {
+    "id": 25,
+    "word": "mild",
+    "type": "adj.",
+    "ipa": "/maɪld/",
+    "meaning": "Nhẹ, êm dịu (mức độ nhẹ)"
+  },
+  {
+    "id": 26,
+    "word": "consult",
+    "type": "v.",
+    "ipa": "/kənˈsʌlt/",
+    "meaning": "Tham khảo ý kiến, hội chẩn, tư vấn"
+  },
+  {
+    "id": 27,
+    "word": "consult the doctor",
+    "type": "v. phr.",
+    "ipa": "/kənˈsʌlt ðə ˈdɒktə(r)/",
+    "meaning": "Tham khảo ý kiến bác sĩ"
+  },
+  {
+    "id": 28,
+    "word": "appointment",
+    "type": "n.",
+    "ipa": "/əˈpɔɪntmənt/",
+    "meaning": "Cuộc hẹn, lịch hẹn (với bác sĩ/nha sĩ)"
+  },
+  {
+    "id": 29,
+    "word": "scheduled an appointment",
+    "type": "v. phr.",
+    "ipa": "/ˈʃedjuːld ən ə ˈpɔɪntmənt/",
+    "meaning": "Đã lên lịch một cuộc hẹn"
+  },
+  {
+    "id": 30,
+    "word": "headache",
+    "type": "n.",
+    "ipa": "/ˈhedeɪk/",
+    "meaning": "Cơn đau đầu, nhức đầu"
+  },
+  {
+    "id": 31,
+    "word": "dental check-up",
+    "type": "n. phr.",
+    "ipa": "/ˈdentl ˈtʃek ʌp/",
+    "meaning": "Khám/kiểm tra răng miệng"
+  },
+  {
+    "id": 32,
+    "word": "the dentist",
+    "type": "n.",
+    "ipa": "/ðə ˈdentɪst/",
+    "meaning": "Nha sĩ, bác sĩ răng hàm mặt"
+  },
+  {
+    "id": 33,
+    "word": "professional",
+    "type": "adj.",
+    "ipa": "/prəˈfeʃənl/",
+    "meaning": "Chuyên nghiệp"
+  },
+  {
+    "id": 34,
+    "word": "less painful",
+    "type": "adj. phr.",
+    "ipa": "/les ˈpeɪnfl/",
+    "meaning": "Bớt đau đớn hơn, ít đau hơn"
+  },
+  {
+    "id": 35,
+    "word": "explained",
+    "type": "v-ed",
+    "ipa": "/ɪkˈspleɪnd/",
+    "meaning": "Đã giải thích, giảng giải"
+  },
+  {
+    "id": 36,
+    "word": "clearly",
+    "type": "adv.",
+    "ipa": "/ˈklɪəli/",
+    "meaning": "Một cách rõ ràng, dễ hiểu"
+  },
+  {
+    "id": 37,
+    "word": "thoroughly",
+    "type": "adv.",
+    "ipa": "/ˈθʌrəli/",
+    "meaning": "Một cách kỹ lưỡng, cặn kẽ"
+  },
+  {
+    "id": 38,
+    "word": "cavity / cavities",
+    "type": "n.",
+    "ipa": "/ˈkævətiz/",
+    "meaning": "Lỗ sâu răng, các vết sâu răng"
+  },
+  {
+    "id": 39,
+    "word": "fill a cavity",
+    "type": "v. phr.",
+    "ipa": "/fɪl ə ˈkævəti/",
+    "meaning": "Trám/hàn một lỗ sâu"
+  },
+  {
+    "id": 40,
+    "word": "gum disease",
+    "type": "n. phr.",
+    "ipa": "/ɡʌm dɪˈziːz/",
+    "meaning": "Bệnh về nướu răng, viêm lợi"
+  },
+  {
+    "id": 41,
+    "word": "lead to",
+    "type": "v. phr.",
+    "ipa": "/liːd tuː/",
+    "meaning": "Dẫn đến, gây ra"
+  },
+  {
+    "id": 42,
+    "word": "serious dental problems",
+    "type": "n. phr.",
+    "ipa": "/ˈsɪəriəs ˈdentl ˈprɒbləmz/",
+    "meaning": "Các vấn đề nghiêm trọng về răng miệng"
+  },
+  {
+    "id": 43,
+    "word": "serious oral health problems",
+    "type": "n. phr.",
+    "ipa": "/ˈsɪəriəs ˈɔːrəl helθ ˈprɒbləmz/",
+    "meaning": "Các vấn đề nghiêm trọng về sức khỏe răng miệng"
+  },
+  {
+    "id": 44,
+    "word": "get a blood test",
+    "type": "v. phr.",
+    "ipa": "/ɡet ə blʌd test/",
+    "meaning": "Làm xét nghiệm máu"
+  },
+  {
+    "id": 45,
+    "word": "arranged to",
+    "type": "v. phr.",
+    "ipa": "/əˈreɪndʒd tuː/",
+    "meaning": "Đã sắp xếp để..."
+  },
+  {
+    "id": 46,
+    "word": "teeth whitening options",
+    "type": "n. phr.",
+    "ipa": "/tiːθ ˈwaɪtnɪŋ ˈɒpʃnz/",
+    "meaning": "Các phương pháp tẩy trắng răng"
+  },
+  {
+    "id": 47,
+    "word": "depending on the condition",
+    "type": "phr.",
+    "ipa": "/dɪˈpendɪŋ ɒn ðə kənˈdɪʃn/",
+    "meaning": "Tùy thuộc vào tình trạng"
+  },
+  {
+    "id": 48,
+    "word": "relieve",
+    "type": "v.",
+    "ipa": "/rɪˈliːv/",
+    "meaning": "Làm dịu đi, giảm bớt (cơn đau/lo âu)"
+  },
+  {
+    "id": 49,
+    "word": "neither constant nor unbearable",
+    "type": "phr.",
+    "ipa": "/ˈnaɪðə(r) ˈkɒnstənt nɔː(r) ʌnˈbeərəbl/",
+    "meaning": "Không liên tục cũng không quá sức chịu đựng"
+  },
+  {
+    "id": 50,
+    "word": "ignored",
+    "type": "v-ed",
+    "ipa": "/ɪɡˈnɔːd/",
+    "meaning": "Bỏ qua, phớt lờ / Bị phớt lờ"
+  },
+  {
+    "id": 51,
+    "word": "skipped",
+    "type": "v-ed",
+    "ipa": "/skɪpt/",
+    "meaning": "Bỏ qua, nhảy cóc, không uống (thuốc)"
+  },
+  {
+    "id": 52,
+    "word": "received",
+    "type": "v-ed",
+    "ipa": "/rɪˈsiːvd/",
+    "meaning": "Đã nhận được"
+  }
+]
