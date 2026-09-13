@@ -1,364 +1,349 @@
 <script setup>
+import AppIcon from './AppIcon.vue'
 defineProps({
-  currentMode: {
-    type: String,
-    required: true
-  },
-  masteredCount: {
-    type: Number,
-    default: 0
-  },
-  totalWords: {
-    type: Number,
-    default: 52
-  }
+  studying: Boolean,
+  currentMode: { type: String, required: true },
+  masteredCount: { type: Number, default: 0 },
+  totalWords: { type: Number, default: 0 },
 })
-
 defineEmits(['change-mode'])
+const items = [
+  { id: 'home', label: 'Tổng quan', icon: 'home' },
+  { id: 'lessons', label: 'Bài học', icon: 'book' },
+  { id: 'flashcard', label: 'Flashcards', icon: 'cards' },
+  { id: 'quiz', label: 'Trắc nghiệm', icon: 'quiz' },
+  { id: 'list', label: 'Từ vựng', icon: 'search' },
+]
 </script>
-
 <template>
-  <div>
-    <!-- Desktop & Mobile Top Header -->
-    <header class="navbar">
-      <div class="nav-container">
-        <!-- Brand -->
-        <div class="nav-brand">
-          <div class="brand-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-            </svg>
-          </div>
-          <div class="brand-text">
-            <h1 class="brand-title">Medi<span>Vocab</span></h1>
-            <span class="brand-badge">52 Từ Y Tế</span>
-          </div>
-        </div>
-
-        <!-- Desktop Navigation Tabs (Hidden on mobile) -->
-        <nav class="nav-tabs-desktop" aria-label="Chế độ học">
-          <button
-            id="tab-flashcard"
-            class="tab-btn"
-            :class="{ active: currentMode === 'flashcard' }"
-            @click="$emit('change-mode', 'flashcard')"
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-              <path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/>
-            </svg>
-            <span>Flashcards</span>
-          </button>
-
-          <button
-            id="tab-quiz"
-            class="tab-btn"
-            :class="{ active: currentMode === 'quiz' }"
-            @click="$emit('change-mode', 'quiz')"
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-              <line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
-            <span>Trắc Nghiệm</span>
-          </button>
-
-          <button
-            id="tab-list"
-            class="tab-btn"
-            :class="{ active: currentMode === 'list' }"
-            @click="$emit('change-mode', 'list')"
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="8" y1="6" x2="21" y2="6"/>
-              <line x1="8" y1="12" x2="21" y2="12"/>
-              <line x1="8" y1="18" x2="21" y2="18"/>
-              <line x1="3" y1="6" x2="3.01" y2="6"/>
-              <line x1="3" y1="12" x2="3.01" y2="12"/>
-              <line x1="3" y1="18" x2="3.01" y2="18"/>
-            </svg>
-            <span>Từ Vựng ({{ totalWords }})</span>
-          </button>
-        </nav>
-
-        <!-- Mastery Pill -->
-        <div class="nav-stat">
-          <div class="stat-info">
-            <span class="stat-label">Đã thuộc:</span>
-            <span class="stat-value"><strong>{{ masteredCount }}</strong>/{{ totalWords }}</span>
-          </div>
-          <div class="stat-bar">
-            <div 
-              class="stat-bar-fill" 
-              :style="{ width: `${(masteredCount / totalWords) * 100}%` }"
-            ></div>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- Mobile Bottom Navigation Dock (Native App Experience) -->
-    <nav class="mobile-bottom-nav" aria-label="Thanh điều hướng di động">
-      <button 
-        class="mobile-tab-btn" 
-        :class="{ active: currentMode === 'flashcard' }"
-        @click="$emit('change-mode', 'flashcard')"
+  <aside class="sidebar clay-card">
+    <a class="brand" href="#home" aria-label="MyHoa — Tổng quan"
+      ><span class="brand-mark"><img src="/myhoa.webp" alt="Logo MyHoa" width="48" height="48" /></span
+      ><span
+        ><strong>My<span>Hoa</span></strong
+        ><small>HỌC NHẸ NHÀNG, NHỚ THẬT LÂU</small></span
+      ></a
+    >
+    <span class="sidebar-label">GÓC HỌC TẬP</span>
+    <nav class="primary-nav" aria-label="Điều hướng chính">
+      <button
+        v-for="item in items"
+        :key="item.id"
+        :id="`tab-${item.id}`"
+        :class="['nav-item', { active: currentMode === item.id }]"
+        :aria-current="currentMode === item.id ? 'page' : undefined"
+        @click="$emit('change-mode', item.id)"
       >
-        <div class="tab-icon">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2">
-            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-            <path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/>
-          </svg>
-        </div>
-        <span class="tab-title">Flashcard</span>
-      </button>
-
-      <button 
-        class="mobile-tab-btn" 
-        :class="{ active: currentMode === 'quiz' }"
-        @click="$emit('change-mode', 'quiz')"
-      >
-        <div class="tab-icon">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-            <line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-        </div>
-        <span class="tab-title">Trắc Nghiệm</span>
-      </button>
-
-      <button 
-        class="mobile-tab-btn" 
-        :class="{ active: currentMode === 'list' }"
-        @click="$emit('change-mode', 'list')"
-      >
-        <div class="tab-icon">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2">
-            <line x1="8" y1="6" x2="21" y2="6"/>
-            <line x1="8" y1="12" x2="21" y2="12"/>
-            <line x1="8" y1="18" x2="21" y2="18"/>
-            <line x1="3" y1="6" x2="3.01" y2="6"/>
-            <line x1="3" y1="12" x2="3.01" y2="12"/>
-            <line x1="3" y1="18" x2="3.01" y2="18"/>
-          </svg>
-        </div>
-        <span class="tab-title">Từ Vựng ({{ totalWords }})</span>
+        <AppIcon :name="item.icon" /><span>{{ item.label }}</span
+        ><span v-if="item.id === 'list'" class="nav-count">{{
+          totalWords
+        }}</span>
       </button>
     </nav>
-  </div>
+    <div class="sidebar-bottom">
+      <div class="little-reminder">
+        <span class="reminder-orb"><AppIcon name="leaf" :size="26" /></span>
+        <h3>Chậm mà chắc.</h3>
+        <p>Mỗi từ bạn học hôm nay<br />là một bước tiến nhỏ.</p>
+        <span class="reminder-dots" aria-hidden="true"
+          ><i></i><i></i><i></i
+        ></span>
+      </div>
+      <div class="sidebar-progress">
+        <span class="mini-avatar"><AppIcon name="book" :size="21" /></span>
+        <div>
+          <strong>Hành trình của bạn</strong
+          ><small>{{ masteredCount }}/{{ totalWords }} từ đã thuộc</small>
+        </div>
+        <AppIcon name="sparkles" :size="17" />
+      </div>
+    </div>
+  </aside>
+  <header class="mobile-header">
+    <a class="brand" href="#home" aria-label="MyHoa — Tổng quan"
+      ><span class="brand-mark"><img src="/myhoa.webp" alt="Logo MyHoa" width="48" height="48" /></span
+      ><strong>My<span>Hoa</span></strong></a
+    ><span class="badge"
+      ><AppIcon name="star" :size="16" />{{ masteredCount }}/{{
+        totalWords
+      }}
+      từ</span
+    >
+  </header>
+  <nav v-if="!studying" class="mobile-nav clay-card" aria-label="Điều hướng di động">
+    <button
+      v-for="item in items"
+      :key="item.id"
+      :class="{ active: currentMode === item.id }"
+      :aria-current="currentMode === item.id ? 'page' : undefined"
+      @click="$emit('change-mode', item.id)"
+    >
+      <AppIcon :name="item.icon" :size="21" /><span>{{ item.label }}</span>
+    </button>
+  </nav>
 </template>
-
 <style scoped>
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  background: rgba(255, 255, 255, 0.9);
-  border-bottom: 1px solid var(--border-subtle);
-  padding: 12px 20px;
-  box-shadow: var(--shadow-xs);
-}
-
-.nav-container {
-  max-width: 1200px;
-  margin: 0 auto;
+.sidebar {
+  position: fixed;
+  inset: 24px auto 24px 24px;
+  width: 244px;
+  z-index: 20;
+  padding: 30px 18px 20px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  flex-direction: column;
 }
-
-.nav-brand {
+.brand {
   display: flex;
   align-items: center;
   gap: 10px;
+  color: var(--text-main);
+  text-decoration: none;
 }
-
-.brand-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--primary-bg);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.sidebar .brand {
+  padding: 0 8px;
+}
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 4px rgb(75 45 106 / 12%));
+}
+.brand strong {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+}
+.brand strong span {
   color: var(--primary);
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
 }
-
-.brand-title {
-  font-size: 1.25rem;
+.brand small {
+  display: block;
+  font-size: 0.44rem;
   font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--text-main);
-  margin: 0;
-  line-height: 1.1;
-}
-
-.brand-title span {
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.brand-badge {
-  display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--primary);
-  background: var(--primary-bg);
-  padding: 1px 8px;
-  border-radius: 20px;
-  border: 1px solid rgba(16, 185, 129, 0.2);
-}
-
-/* Desktop Navigation */
-.nav-tabs-desktop {
-  display: flex;
-  background: #f1f5f9;
-  padding: 4px;
-  border-radius: 12px;
-  border: 1px solid var(--border-subtle);
-  gap: 4px;
-}
-
-.tab-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 9px;
-  background: transparent;
-  border: none;
+  letter-spacing: 0.07em;
+  margin-top: 3px;
   color: var(--text-muted);
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
-
-.tab-btn:hover {
-  color: var(--text-main);
-  background: rgba(255, 255, 255, 0.6);
+.sidebar-label {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  margin: 45px 18px 14px;
 }
-
-.tab-btn.active {
-  color: var(--primary-dark);
-  background: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  font-weight: 700;
-}
-
-.nav-stat {
+.primary-nav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-width: 130px;
+  gap: 9px;
 }
-
-.stat-info {
+.nav-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 0.8rem;
+  gap: 13px;
+  width: 100%;
+  min-height: 54px;
+  padding: 12px 17px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: left;
+  border-radius: 20px;
+}
+.nav-item.active {
+  color: var(--primary-dark);
+  background: linear-gradient(130deg, #f2eaff, #e8dcfb);
+  box-shadow:
+    4px 4px 10px #dcd2ea80,
+    -3px -3px 8px #ffffff,
+    inset 2px 2px 3px #ffffffb3,
+    inset -2px -2px 5px #bda4e930;
+}
+.nav-item:hover {
+  background-color: var(--primary-bg);
+  color: var(--primary);
+}
+.nav-count {
+  margin-left: auto;
+  padding: 3px 8px;
+  background: #eae5f0;
+  color: var(--text-muted);
+  border-radius: 20px;
+  font-size: 0.68rem;
+}
+.sidebar-bottom {
+  margin-top: auto;
+  padding-top: 42px;
+}
+.little-reminder {
+  position: relative;
+  text-align: center;
+  padding: 43px 10px 20px;
+  border-radius: 28px;
+  background: linear-gradient(140deg, #eee7fa, #f4edf9);
+  box-shadow:
+    inset 2px 2px 6px #dacfea60,
+    inset -3px -3px 8px #ffffff;
+}
+.reminder-orb {
+  position: absolute;
+  top: -23px;
+  left: calc(50% - 26px);
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  color: #527d65;
+  border-radius: 22px;
+  transform: rotate(-10deg);
+  background: linear-gradient(135deg, #d8f3e1, #aad6bc);
+  box-shadow: var(--shadow-orb);
+}
+.little-reminder h3 {
+  font-size: 1rem;
+  margin-bottom: 5px;
+}
+.little-reminder p {
+  font-size: 0.73rem;
+  line-height: 1.8;
   color: var(--text-muted);
 }
-
-.stat-info strong {
+.reminder-dots {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  margin-top: 16px;
+}
+.reminder-dots i {
+  width: 5px;
+  height: 5px;
+  background: #c5b6dd;
+  border-radius: 50%;
+}
+.reminder-dots i:first-child {
+  width: 17px;
+  background: #9870cb;
+}
+.sidebar-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 23px 2px 0;
+}
+.sidebar-progress strong {
+  display: block;
+  font-size: 0.75rem;
+}
+.sidebar-progress small {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.66rem;
+  color: var(--text-muted);
+}
+.sidebar-progress > .app-icon {
+  margin-left: auto;
   color: var(--primary);
-  font-size: 0.92rem;
 }
-
-.stat-bar {
-  height: 6px;
-  background: #e2e8f0;
-  border-radius: 3px;
-  overflow: hidden;
+.mini-avatar {
+  display: grid;
+  place-items: center;
+  width: 39px;
+  height: 42px;
+  border-radius: 17px;
+  background: #e9dff8;
+  color: var(--primary);
 }
-
-.stat-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #10b981, #0284c7);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-/* Mobile Bottom Navigation (Hidden on Desktop) */
-.mobile-bottom-nav {
+.mobile-header,
+.mobile-nav {
   display: none;
 }
-
-@media (max-width: 768px) {
-  .nav-tabs-desktop {
+@media (max-width: 1100px) and (min-width: 769px) {
+  .sidebar {
+    width: 210px;
+    left: 16px;
+    padding-inline: 12px;
+  }
+  .brand strong {
+    font-size: 1.25rem;
+  }
+  .brand small {
+    font-size: 0.39rem;
+  }
+  .sidebar-label {
+    margin-top: 35px;
+  }
+}
+@media (max-height: 750px) and (min-width: 769px) {
+  .sidebar {
+    padding-top: 22px;
+  }
+  .sidebar-label {
+    margin-top: 25px;
+  }
+  .little-reminder {
+    padding-bottom: 12px;
+  }
+  .reminder-dots {
     display: none;
   }
-
-  .navbar {
-    padding: 10px 16px;
+  .sidebar-bottom {
+    padding-top: 35px;
   }
-
-  .nav-stat {
-    min-width: 100px;
+}
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
   }
-
-  .mobile-bottom-nav {
+  .mobile-header {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 21px 20px 8px;
+  }
+  .mobile-nav {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 999;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border-subtle);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-    padding: 6px 12px calc(6px + env(safe-area-inset-bottom, 0px));
-    justify-content: space-around;
-  }
-
-  .mobile-tab-btn {
-    flex: 1;
     display: flex;
+    justify-content: space-around;
+    z-index: 30;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    left: 12px;
+    right: 12px;
+    padding: 8px 5px;
+    background: #faf7ffed;
+    border-radius: 26px;
+  }
+  .mobile-nav button {
+    display: flex;
+    flex: 1;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    padding: 6px 4px;
-    background: transparent;
+    gap: 5px;
     border: none;
-    color: var(--text-dim);
-    cursor: pointer;
-    border-radius: 10px;
-    transition: all 0.2s;
+    background: transparent;
+    color: var(--text-muted);
+    padding: 8px 2px;
+    border-radius: 20px;
+    font-size: 0.58rem;
   }
-
-  .mobile-tab-btn.active {
-    color: var(--primary);
+  .mobile-nav button.active {
+    background: #eae0f9;
+    color: var(--primary-dark);
   }
-
-  .mobile-tab-btn .tab-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 30px;
-    border-radius: 16px;
-    transition: background 0.2s;
+  .mobile-header .badge {
+    font-size: 0.7rem;
   }
-
-  .mobile-tab-btn.active .tab-icon {
-    background: var(--primary-bg);
-  }
-
-  .mobile-tab-btn .tab-title {
-    font-size: 0.72rem;
-    font-weight: 700;
+  .mobile-header .brand strong {
+    font-size: 1.3rem;
   }
 }
 </style>

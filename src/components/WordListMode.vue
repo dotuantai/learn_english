@@ -1,16 +1,17 @@
 <script setup>
 import { ref, computed } from 'vue'
+import AppIcon from './AppIcon.vue'
 import { speakEnglish } from '../utils/speech'
 
 const props = defineProps({
   words: {
     type: Array,
-    required: true
+    required: true,
   },
   masteredIds: {
     type: Array,
-    default: () => []
-  }
+    default: () => [],
+  },
 })
 
 const emit = defineEmits(['toggle-mastered'])
@@ -19,28 +20,37 @@ const searchQuery = ref('')
 const selectedType = ref('all')
 const selectedStatus = ref('all')
 
+function resetFilters() {
+  searchQuery.value = ''
+  selectedType.value = 'all'
+  selectedStatus.value = 'all'
+}
+
 // Extract distinct types
 const distinctTypes = computed(() => {
   const types = new Set()
-  props.words.forEach(w => types.add(w.type))
+  props.words.forEach((w) => types.add(w.type))
   return Array.from(types)
 })
 
 const filteredWords = computed(() => {
-  return props.words.filter(word => {
+  return props.words.filter((word) => {
     // 1. Search Query
     const query = searchQuery.value.toLowerCase().trim()
-    const matchesQuery = !query || 
+    const matchesQuery =
+      !query ||
       word.word.toLowerCase().includes(query) ||
       word.meaning.toLowerCase().includes(query) ||
       word.ipa.toLowerCase().includes(query)
 
     // 2. Type Filter
-    const matchesType = selectedType.value === 'all' || word.type === selectedType.value
+    const matchesType =
+      selectedType.value === 'all' || word.type === selectedType.value
 
     // 3. Status Filter
     const isMastered = props.masteredIds.includes(word.id)
-    const matchesStatus = selectedStatus.value === 'all' || 
+    const matchesStatus =
+      selectedStatus.value === 'all' ||
       (selectedStatus.value === 'mastered' && isMastered) ||
       (selectedStatus.value === 'learning' && !isMastered)
 
@@ -54,55 +64,92 @@ const filteredWords = computed(() => {
     <!-- Header & Search Controls -->
     <div class="list-controls-card">
       <div class="search-bar">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        <svg
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          class="search-icon"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
-        <input 
+        <label for="search-words-input" class="sr-only">Tìm từ vựng</label>
+        <input
           id="search-words-input"
-          v-model="searchQuery" 
-          type="text" 
-          placeholder="Tìm từ tiếng Anh, phát âm hoặc nghĩa..." 
+          v-model="searchQuery"
+          type="text"
+          placeholder="Tìm từ tiếng Anh, phát âm hoặc nghĩa..."
         />
-        <button v-if="searchQuery" class="clear-search-btn" @click="searchQuery = ''">✕</button>
+        <button
+          v-if="searchQuery"
+          class="clear-search-btn"
+          aria-label="Xóa tìm kiếm"
+          @click="searchQuery = ''"
+        >
+          <AppIcon name="close" :size="18" />
+        </button>
       </div>
 
       <!-- Filters -->
       <div class="filter-row">
         <!-- Type Filter -->
         <div class="filter-group">
-          <label>Từ loại:</label>
-          <select id="filter-type-select" v-model="selectedType" class="select-box">
+          <label for="filter-type-select">Từ loại</label>
+          <select
+            id="filter-type-select"
+            v-model="selectedType"
+            class="select-box"
+          >
             <option value="all">Tất cả từ loại</option>
-            <option v-for="t in distinctTypes" :key="t" :value="t">{{ t }}</option>
+            <option v-for="t in distinctTypes" :key="t" :value="t">
+              {{ t }}
+            </option>
           </select>
         </div>
 
         <!-- Status Filter -->
         <div class="filter-group">
-          <label>Trạng thái:</label>
-          <select id="filter-status-select" v-model="selectedStatus" class="select-box">
+          <label for="filter-status-select">Trạng thái</label>
+          <select
+            id="filter-status-select"
+            v-model="selectedStatus"
+            class="select-box"
+          >
             <option value="all">Tất cả trạng thái</option>
             <option value="learning">Cần ôn tập</option>
             <option value="mastered">Đã thuộc</option>
           </select>
         </div>
 
-        <div class="result-count">
-          <span>Tìm thấy <strong>{{ filteredWords.length }}</strong> / {{ words.length }} từ</span>
+        <div class="result-count" aria-live="polite">
+          <span
+            >Tìm thấy <strong>{{ filteredWords.length }}</strong> /
+            {{ words.length }} từ</span
+          >
         </div>
       </div>
     </div>
 
     <!-- Word Grid -->
     <div v-if="filteredWords.length === 0" class="empty-search">
-      <p>Không tìm thấy từ nào phù hợp với điều kiện tìm kiếm.</p>
+      <AppIcon name="search" :size="35" />
+      <h2>Chưa tìm thấy từ phù hợp</h2>
+      <p>Thử một từ khác hoặc bỏ bớt bộ lọc nhé.</p>
+      <button
+        class="btn btn-secondary"
+        @click="resetFilters"
+      >
+        Xóa bộ lọc
+      </button>
     </div>
 
     <div v-else class="words-grid">
-      <div 
-        v-for="word in filteredWords" 
-        :key="word.id" 
+      <div
+        v-for="word in filteredWords"
+        :key="word.id"
         class="word-item-card"
         :class="{ mastered: masteredIds.includes(word.id) }"
       >
@@ -112,14 +159,30 @@ const filteredWords = computed(() => {
             <span class="type-pill">{{ word.type }}</span>
           </div>
 
-          <button 
+          <button
             class="star-toggle"
             :class="{ active: masteredIds.includes(word.id) }"
-            :title="masteredIds.includes(word.id) ? 'Đã thuộc (Nhấp để hủy)' : 'Đánh dấu đã thuộc'"
+            :aria-pressed="masteredIds.includes(word.id)"
+            :aria-label="`${masteredIds.includes(word.id) ? 'Bỏ đánh dấu' : 'Đánh dấu đã thuộc'}: ${word.word}`"
+            :title="
+              masteredIds.includes(word.id)
+                ? 'Đã thuộc (Nhấp để hủy)'
+                : 'Đánh dấu đã thuộc'
+            "
             @click="emit('toggle-mastered', word.id)"
           >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              :fill="masteredIds.includes(word.id) ? 'currentColor' : 'none'"
+              stroke="currentColor"
+              stroke-width="1.7"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+              />
             </svg>
           </button>
         </div>
@@ -128,14 +191,22 @@ const filteredWords = computed(() => {
           <h3 class="word-name">{{ word.word }}</h3>
           <div class="word-ipa-row">
             <span class="word-ipa">{{ word.ipa }}</span>
-            <button 
-              class="audio-mini-btn" 
-              title="Phát âm" 
+            <button
+              class="audio-mini-btn"
+              :aria-label="`Nghe phát âm: ${word.word}`"
+              title="Phát âm"
               @click="speakEnglish(word.word)"
             >
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
               </svg>
             </button>
           </div>
@@ -148,242 +219,226 @@ const filteredWords = computed(() => {
 
 <style scoped>
 .list-container {
-  max-width: 1040px;
-  margin: 0 auto;
-  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 27px;
 }
-
 .list-controls-card {
-  background: #ffffff;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 16px 20px;
+  background: #faf7ffcc;
+  border: 1px solid #ffffffb3;
+  border-radius: 30px;
+  padding: 25px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  box-shadow: var(--shadow-sm);
+  gap: 20px;
+  box-shadow: var(--shadow-card);
 }
-
 .search-bar {
   position: relative;
   display: flex;
   align-items: center;
 }
-
 .search-icon {
   position: absolute;
-  left: 14px;
-  color: var(--text-dim);
+  left: 20px;
+  color: var(--text-muted);
 }
-
 .search-bar input {
   width: 100%;
-  padding: 12px 38px 12px 42px;
-  border-radius: 10px;
-  background: #f8fafc;
-  border: 1px solid var(--border-subtle);
+  min-height: 58px;
+  padding: 16px 55px 16px 50px;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-pressed);
   color: var(--text-main);
-  font-family: inherit;
-  font-size: 0.92rem;
-  outline: none;
-  transition: all 0.2s;
+  font-size: 0.86rem;
+  transition: 0.2s;
 }
-
+.search-bar input::placeholder {
+  color: var(--text-muted);
+}
 .search-bar input:focus {
-  border-color: var(--primary);
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+  border-color: var(--primary-light);
+  background: #fefaff;
 }
-
 .clear-search-btn {
   position: absolute;
-  right: 12px;
+  right: 8px;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 20px;
   background: transparent;
-  border: none;
-  color: var(--text-dim);
-  font-size: 0.9rem;
-  cursor: pointer;
+  color: var(--text-muted);
 }
-
 .filter-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 15px;
 }
-
 .filter-group {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.84rem;
+  gap: 10px;
+  font-size: 0.76rem;
   color: var(--text-muted);
 }
-
 .select-box {
-  background: #ffffff;
+  background: #f6f0fc;
   border: 1px solid var(--border-subtle);
   color: var(--text-main);
-  padding: 7px 12px;
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 0.84rem;
-  outline: none;
+  min-height: 44px;
+  padding: 10px 32px 10px 15px;
+  border-radius: 20px;
+  font-size: 0.76rem;
   cursor: pointer;
+  max-width: 100%;
 }
-
 .result-count {
-  font-size: 0.84rem;
-  color: var(--text-dim);
+  font-size: 0.74rem;
+  color: var(--text-muted);
 }
-
 .result-count strong {
-  color: var(--primary);
+  color: var(--primary-dark);
 }
-
 .words-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
 }
-
 .word-item-card {
-  background: #ffffff;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 16px;
+  background: var(--card-gradient);
+  border: 1px solid #ffffffb3;
+  border-radius: 28px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  transition: all 0.18s ease;
-  box-shadow: var(--shadow-xs);
+  gap: 16px;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s;
 }
-
 .word-item-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(16, 185, 129, 0.4);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-lg);
 }
-
 .word-item-card.mastered {
-  border-color: #fde68a;
-  background: linear-gradient(145deg, #ffffff 0%, #fffbeb 100%);
+  background: linear-gradient(135deg, #fffcfa, #faf0df);
+  border-color: #eddbb8;
 }
-
 .card-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
 .top-left {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
-
 .stt-badge {
-  font-size: 0.72rem;
-  color: var(--text-dim);
+  font-size: 0.66rem;
+  color: var(--text-muted);
   font-weight: 700;
 }
-
 .type-pill {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 2px 7px;
-  border-radius: 6px;
+  font-size: 0.61rem;
+  font-weight: 800;
+  padding: 5px 10px;
+  border-radius: 20px;
   background: var(--primary-bg);
   color: var(--primary-dark);
-  border: 1px solid rgba(16, 185, 129, 0.2);
 }
-
 .star-toggle {
-  background: transparent;
-  border: none;
-  color: #cbd5e1;
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  transition: color 0.15s;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: #eee6f5;
+  border: 0;
+  border-radius: 18px;
+  color: var(--text-muted);
 }
-
 .star-toggle:hover {
-  color: #f59e0b;
+  color: var(--warning);
+  background: var(--warning-bg);
 }
-
 .star-toggle.active {
-  color: #f59e0b;
+  color: var(--warning);
+  background: #f8e4bc;
 }
-
 .card-main {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 7px;
 }
-
 .word-name {
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: var(--text-main);
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
 }
-
 .word-ipa-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
 }
-
 .word-ipa {
-  font-size: 0.85rem;
-  color: var(--accent);
-  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--primary-dark);
+  overflow-wrap: anywhere;
 }
-
 .audio-mini-btn {
-  background: var(--primary-bg);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  color: var(--primary);
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 0;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s;
+  background: var(--primary-bg);
+  color: var(--primary-dark);
+  display: grid;
+  place-items: center;
 }
-
 .audio-mini-btn:hover {
-  transform: scale(1.1);
-  background: rgba(16, 185, 129, 0.2);
+  background: #e1d0f6;
 }
-
 .word-meaning {
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   color: var(--text-muted);
-  line-height: 1.4;
-  margin-top: 2px;
+  line-height: 1.7;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
 }
-
 .empty-search {
   text-align: center;
-  padding: 40px;
+  padding: 50px 24px;
   color: var(--text-muted);
-  background: #ffffff;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-subtle);
+  background: var(--card-gradient);
+  border-radius: 32px;
+  box-shadow: var(--shadow-card);
 }
-
+.empty-search > .app-icon {
+  color: var(--primary);
+  margin-bottom: 20px;
+}
+.empty-search h2 {
+  color: var(--text-main);
+  font-size: 1.3rem;
+}
+.empty-search p {
+  margin: 10px 0 24px;
+  font-size: 0.85rem;
+}
+@media (max-width: 1200px) {
+  .words-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 @media (max-width: 600px) {
-  .list-container {
-    padding: 12px;
+  .list-controls-card {
+    padding: 20px;
   }
   .filter-row {
     flex-direction: column;
@@ -393,11 +448,20 @@ const filteredWords = computed(() => {
     justify-content: space-between;
   }
   .select-box {
-    flex: 1;
-    text-align: right;
+    width: 68%;
   }
   .words-grid {
     grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .result-count {
+    margin-top: 5px;
+  }
+  .search-bar input {
+    font-size: 0.78rem;
+  }
+  .word-item-card {
+    padding: 23px;
   }
 }
 </style>

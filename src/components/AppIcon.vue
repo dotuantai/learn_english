@@ -1,0 +1,105 @@
+<script setup>
+defineProps({
+  name: { type: String, default: 'book' },
+  size: { type: [Number, String], default: 22 },
+})
+const paths = {
+  home: ['m3 10 9-7 9 7', 'M5 9v11h5v-6h4v6h5V9'],
+  book: ['M12 5v16', 'M12 5C8 2 3 3 3 3v16s5-1 9 2c4-3 9-2 9-2V3s-5-1-9 2Z'],
+  cards: [
+    'M7 3h11a3 3 0 0 1 3 3v10',
+    'M6 7h9a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3Z',
+    'M7 13h7',
+    'M7 17h4',
+  ],
+  quiz: [
+    'M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4',
+    'm9 12 3 3L22 5',
+    'M9 3h6v4H9z',
+  ],
+  search: ['M21 21l-5-5', 'M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0'],
+  arrow: ['M4 12h16', 'm14 6 6 6-6 6'],
+  back: ['M20 12H4', 'm10 6-6 6 6 6'],
+  chevron: ['m9 5 7 7-7 7'],
+  check: ['m5 12 4 4L19 6'],
+  close: ['m6 6 12 12', 'M6 18 18 6'],
+  heart: [
+    'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z',
+  ],
+  pulse: ['M2 12h4l3-8 6 16 3-8h4'],
+  medical: [
+    'M8 6V3h8v3',
+    'M4 7h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z',
+    'M12 11v6',
+    'M9 14h6',
+  ],
+  chat: ['M21 11a9 9 0 0 1-9 9H3l1-5A9 9 0 1 1 21 11Z', 'M8 10h8', 'M8 14h5'],
+  tooth: [
+    'M12 4C5-1 1 4 4 12c1 3 1 9 4 9 2 0 1-7 4-7s2 7 4 7c3 0 3-6 4-9 3-8-1-13-8-8Z',
+  ],
+  sparkles: [
+    'm12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z',
+    'M21 2v4',
+    'M19 4h4',
+  ],
+  star: [
+    'm12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z',
+  ],
+  trophy: [
+    'M8 3h8v7a4 4 0 0 1-8 0V3Z',
+    'M8 5H4v3a4 4 0 0 0 4 4',
+    'M16 5h4v3a4 4 0 0 1-4 4',
+    'M12 14v7',
+    'M8 21h8',
+  ],
+  target: [
+    'M21 12a9 9 0 1 1-9-9',
+    'M17 12a5 5 0 1 1-5-5',
+    'm12 12 9-9',
+    'M16 3h5v5',
+  ],
+  sound: [
+    'M11 5 6 9H2v6h4l5 4V5Z',
+    'M15 8a6 6 0 0 1 0 8',
+    'M18 4a11 11 0 0 1 0 16',
+  ],
+  headphones: ['M3 14v-3a9 9 0 0 1 18 0v3', 'M3 12h4v9H3z', 'M17 12h4v9h-4z'],
+  shuffle: [
+    'M3 5h4l10 14h4',
+    'm17 15 4 4-4 3',
+    'M3 19h4l3-4',
+    'm14 9 3-4h4',
+    'm17 2 4 3-4 4',
+  ],
+  clock: ['M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0', 'M12 7v5l3 2'],
+  language: [
+    'M3 5h12',
+    'M9 3v2',
+    'M12 5c0 6-4 10-9 12',
+    'M5 9c1 3 4 6 7 7',
+    'm13 21 4-11 4 11',
+    'M15 17h4',
+  ],
+  leaf: ['M20 3C9 2 2 7 5 15c8 5 16-1 15-12Z', 'M3 21 15 9'],
+}
+</script>
+<template>
+  <svg
+    :width="size"
+    :height="size"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+    class="app-icon"
+  >
+    <path
+      v-for="(path, index) in paths[name] || paths.book"
+      :key="index"
+      :d="path"
+    />
+  </svg>
+</template>
