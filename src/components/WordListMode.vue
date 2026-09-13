@@ -8,6 +8,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  lessons: {
+    type: Array,
+    default: () => [],
+  },
   masteredIds: {
     type: Array,
     default: () => [],
@@ -19,11 +23,13 @@ const emit = defineEmits(['toggle-mastered'])
 const searchQuery = ref('')
 const selectedType = ref('all')
 const selectedStatus = ref('all')
+const selectedLesson = ref('all')
 
 function resetFilters() {
   searchQuery.value = ''
   selectedType.value = 'all'
   selectedStatus.value = 'all'
+  selectedLesson.value = 'all'
 }
 
 // Extract distinct types
@@ -32,6 +38,26 @@ const distinctTypes = computed(() => {
   props.words.forEach((w) => types.add(w.type))
   return Array.from(types)
 })
+
+const lessonOptions = computed(() => {
+  if (props.lessons && props.lessons.length > 0) {
+    return props.lessons.map((lesson) => ({
+      value: lesson.key || lesson.id,
+      label: `Bài ${lesson.number}: ${lesson.title}`,
+    }))
+  }
+  return [
+    { value: 'bai1', label: 'Bài 1: Y tế & chăm sóc sức khỏe' },
+    { value: 'bai2', label: 'Bài 2: Họ từ vựng Y tế & Sức khỏe' },
+  ]
+})
+
+function getLessonBadge(word) {
+  if (word.lessonKey === 'bai1' || word.id <= 52) {
+    return { text: 'Bài 1', class: 'bai1' }
+  }
+  return { text: 'Bài 2', class: 'bai2' }
+}
 
 const filteredWords = computed(() => {
   return props.words.filter((word) => {
@@ -54,7 +80,16 @@ const filteredWords = computed(() => {
       (selectedStatus.value === 'mastered' && isMastered) ||
       (selectedStatus.value === 'learning' && !isMastered)
 
-    return matchesQuery && matchesType && matchesStatus
+    // 4. Lesson Filter
+    const matchesLesson =
+      selectedLesson.value === 'all' ||
+      word.lessonKey === selectedLesson.value ||
+      (selectedLesson.value === 'bai1' && (word.lessonKey === 'bai1' || word.id <= 52)) ||
+      (selectedLesson.value === 'bai2' && (word.lessonKey === 'bai2' || word.id >= 53)) ||
+      (selectedLesson.value === 'lesson-1' && (word.lessonKey === 'bai1' || word.id <= 52)) ||
+      (selectedLesson.value === 'lesson-2' && (word.lessonKey === 'bai2' || word.id >= 53))
+
+    return matchesQuery && matchesType && matchesStatus && matchesLesson
   })
 })
 </script>
@@ -95,6 +130,25 @@ const filteredWords = computed(() => {
 
       <!-- Filters -->
       <div class="filter-row">
+        <!-- Lesson Filter -->
+        <div class="filter-group">
+          <label for="filter-lesson-select">Bài học</label>
+          <select
+            id="filter-lesson-select"
+            v-model="selectedLesson"
+            class="select-box"
+          >
+            <option value="all">Tất cả bài học</option>
+            <option
+              v-for="l in lessonOptions"
+              :key="l.value"
+              :value="l.value"
+            >
+              {{ l.label }}
+            </option>
+          </select>
+        </div>
+
         <!-- Type Filter -->
         <div class="filter-group">
           <label for="filter-type-select">Từ loại</label>
@@ -157,6 +211,7 @@ const filteredWords = computed(() => {
           <div class="top-left">
             <span class="stt-badge">#{{ word.id }}</span>
             <span class="type-pill">{{ word.type }}</span>
+            <span :class="['lesson-pill', getLessonBadge(word).class]">{{ getLessonBadge(word).text }}</span>
           </div>
 
           <button
@@ -351,6 +406,25 @@ const filteredWords = computed(() => {
   border-radius: 20px;
   background: var(--primary-bg);
   color: var(--primary-dark);
+}
+.lesson-pill {
+  font-size: 0.61rem;
+  font-weight: 800;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+}
+.lesson-pill.bai1 {
+  background: #ede3fc;
+  color: #7040ae;
+  border-color: #e6d7fb;
+}
+.lesson-pill.bai2 {
+  background: #e3f0fb;
+  color: #286990;
+  border-color: #d2e9fa;
 }
 .star-toggle {
   width: 44px;

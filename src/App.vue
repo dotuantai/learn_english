@@ -1,7 +1,13 @@
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import wordsData from './data/words.json'
+import rawWordsData from './data/words.json'
 import { buildLessons } from './data/lessons'
+
+const wordsData = Array.isArray(rawWordsData)
+  ? rawWordsData
+  : Object.entries(rawWordsData).flatMap(([lessonKey, list]) =>
+      list.map((item) => ({ ...item, lessonKey })),
+    )
 import Navbar from './components/Navbar.vue'
 import AppIcon from './components/AppIcon.vue'
 import LearningDashboard from './components/LearningDashboard.vue'
@@ -250,6 +256,7 @@ onUnmounted(() => window.removeEventListener('hashchange', syncRoute))
           </div>
           <WordListMode
             :words="wordsData"
+            :lessons="lessons"
             :mastered-ids="masteredIds"
             @toggle-mastered="toggleMastered"
         /></template>

@@ -2,9 +2,11 @@ import { test, expect } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { buildLessons } from '../src/data/lessons.js'
 
-const words = JSON.parse(
+const rawWords = JSON.parse(
   readFileSync(new URL('../src/data/words.json', import.meta.url), 'utf8'),
 )
+const words = Array.isArray(rawWords) ? rawWords : Object.values(rawWords).flat()
+const lesson1Words = buildLessons(words).find((l) => l.id === 'lesson-1').words
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -30,31 +32,34 @@ test('every vocabulary entry belongs to one lesson and mastery stays scoped', ()
     words.map((word) => word.id).sort((a, b) => a - b),
   )
   expect(new Set(ids).size).toBe(words.length)
-  expect(lessons).toHaveLength(1)
+  expect(lessons).toHaveLength(2)
   expect(lessons[0].id).toBe('lesson-1')
   expect(lessons[0].masteredCount).toBe(2)
+  expect(lessons[1].id).toBe('lesson-2')
+  expect(lessons[1].masteredCount).toBe(0)
 })
 
 
-test('one merged lesson is shown and study shortcuts preserve the lesson context', async ({ page }) => {
+test('lessons are shown and study shortcuts preserve the lesson context', async ({ page }) => {
   await page.goto('/')
-  await expect(page.locator('.lesson-card')).toHaveCount(1)
-  await expect(page.locator('.lesson-card')).toContainText('BÀI 01')
-  await expect(page.locator('.lesson-card')).toContainText(`${words.length} từ vựng`)
+  await expect(page.locator('.lesson-card')).toHaveCount(2)
+  await expect(page.locator('.lesson-card').first()).toContainText('BÀI 01')
+  await expect(page.locator('.lesson-card').first()).toContainText(`${lesson1Words.length} từ vựng`)
+  await expect(page.locator('.lesson-card').nth(1)).toContainText('BÀI 02')
   await page.getByRole('navigation', { name: 'Điều hướng chính', exact: true })
     .getByRole('button', { name: 'Bài học', exact: true }).click()
-  await expect(page.locator('.lesson-card')).toHaveCount(1)
-  await expect(page.getByRole('button', { name: `Học toàn bộ ${words.length} từ` })).toHaveCount(0)
+  await expect(page.locator('.lesson-card')).toHaveCount(2)
+  await expect(page.getByRole('button', { name: `Học toàn bộ ${words.length} từ` })).toBeVisible()
   for (const [label, mode] of [['Flashcards', 'flashcard'], ['Trắc nghiệm', 'quiz']]) {
     await page.getByRole('navigation', { name: 'Điều hướng chính', exact: true })
       .getByRole('button', { name: label, exact: true }).click()
-    await expect(page).toHaveURL(new RegExp(`#lesson/lesson-1/${mode}$`))
+    await expect(page).toHaveURL(new RegExp(`#lesson/all/${mode}$`))
     await expect(page.locator('.summary-progress')).toContainText(`0/${words.length}`)
   }
-  // Existing bookmarks now resolve to the complete first lesson.
+  // Existing bookmarks now resolve to the all-words view.
   for (const previousId of ['everyday-health', 'treatment', 'consultation', 'dental-care', 'all']) {
     await page.goto(`/#lesson/${previousId}/flashcard`)
-    await expect(page.getByRole('heading', { name: 'Y tế & chăm sóc sức khỏe', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Toàn bộ từ vựng', exact: true })).toBeVisible()
     await expect(page.locator('.summary-progress')).toContainText(`0/${words.length}`)
   }
 })
@@ -70,7 +75,7 @@ test('lesson entry, flashcard review, pronunciation, completion and saved master
   await expect(
     page.getByRole('heading', { name: 'Y tế & chăm sóc sức khỏe', exact: true }),
   ).toBeVisible()
-  await expect(page.locator('.summary-progress')).toContainText(`0/${words.length}`)
+  await expect(page.locator('.summary-progress')).toContainText(`0/${lesson1Words.length}`)
   await page.getByRole('button', { name: 'Bắt đầu học flashcards' }).click()
   await expect(page.locator('.word-text')).toHaveText('careful')
   await page.getByRole('button', { name: 'Nghe phát âm', exact: true }).click()
@@ -86,15 +91,15 @@ test('lesson entry, flashcard review, pronunciation, completion and saved master
   await page.getByLabel('Nhập nghĩa tiếng Việt').fill('không đúng')
   await page.getByRole('button', { name: 'Kiểm tra', exact: true }).click()
   await expect(page.locator('.feedback')).toContainText('Chưa đúng')
-  await expect(page.locator('.card-meta')).toContainText(`1 / ${words.length + 1}`)
+  await expect(page.locator('.card-meta')).toContainText(`1 / ${lesson1Words.length + 1}`)
   await page.getByRole('button', { name: 'Tiếp theo →', exact: true }).click()
   await expect(page.locator('.word-text')).toHaveText('carefully')
   await page.getByRole('button', { name: 'Đánh dấu đã thuộc', exact: true }).click()
   await expect(page.locator('.word-text')).toHaveText('carefully')
-  await expect(page.locator('.card-meta')).toContainText(`2 / ${words.length + 1}`)
-  for (let index = 0; index < words.length; index += 1) {
+  await expect(page.locator('.card-meta')).toContainText(`2 / ${lesson1Words.length + 1}`)
+  for (let index = 0; index < lesson1Words.length; index += 1) {
     const wordText = await page.locator('.word-text').innerText()
-    const word = words.find((entry) => entry.word === wordText)
+    const word = lesson1Words.find((entry) => entry.word === wordText)
     const meaning = word.meaning
       .replace(/\([^)]*\)/g, ' ')
       .split(/[,;/]+/)[0]
@@ -102,18 +107,18 @@ test('lesson entry, flashcard review, pronunciation, completion and saved master
     await page.getByLabel('Nhập nghĩa tiếng Việt').fill(meaning)
     await page.getByRole('button', { name: 'Kiểm tra', exact: true }).click()
     await expect(page.locator('.feedback')).toContainText('Chính xác!')
-    if (index < words.length - 1)
+    if (index < lesson1Words.length - 1)
       await expect(page.getByLabel('Nhập nghĩa tiếng Việt')).toHaveValue('')
   }
   await expect(
     page.getByRole('heading', { name: 'Hoàn thành!', exact: true }),
   ).toBeVisible()
-  await expect(page.locator('.result-stats')).toContainText(`${Math.round((words.length - 1) / words.length * 100)}%`)
+  await expect(page.locator('.result-stats')).toContainText(`${Math.round((lesson1Words.length - 1) / lesson1Words.length * 100)}%`)
   await page.getByRole('button', { name: 'Chọn bài học tiếp theo' }).click()
   await page.reload()
   await expect(page.locator('.sidebar-progress')).toContainText(`2/${words.length}`)
   await expect(page.locator('.lesson-card').first()).toContainText(
-    `2/${words.length} đã thuộc`,
+    `2/${lesson1Words.length} đã thuộc`,
   )
   expect(errors).toEqual([])
 })
@@ -123,7 +128,7 @@ test('quiz scoring, wrong-answer review, replay and return to lessons', async ({
 }) => {
   await page.goto('/#lesson/lesson-1/quiz')
   await expect(
-    page.getByRole('button', { name: `Tất cả ${words.length} câu`, exact: true }),
+    page.getByRole('button', { name: `Tất cả ${lesson1Words.length} câu`, exact: true }),
   ).toBeVisible()
   await page.getByRole('button', { name: 'Bắt đầu trắc nghiệm' }).click()
   for (let index = 0; index < 10; index += 1) {
@@ -158,7 +163,7 @@ test('quiz scoring, wrong-answer review, replay and return to lessons', async ({
   await expect(page.locator('.res-stat-box').last()).toContainText('1')
   await page.getByRole('button', { name: 'Làm bài kiểm tra mới' }).click()
   await expect(
-    page.getByRole('button', { name: `Tất cả ${words.length} câu`, exact: true }),
+    page.getByRole('button', { name: `Tất cả ${lesson1Words.length} câu`, exact: true }),
   ).toBeVisible()
 })
 
@@ -207,18 +212,31 @@ test('library search, filters, empty state and persisted mastery remain availabl
     page.getByRole('heading', { name: 'Chưa tìm thấy từ phù hợp' }),
   ).toBeVisible()
   await page.getByRole('button', { name: 'Xóa bộ lọc' }).click()
-  await expect(page.locator('.word-item-card')).toHaveCount(52)
+  await expect(page.locator('.word-item-card')).toHaveCount(words.length)
   await page.getByLabel('Từ loại', { exact: true }).selectOption('adj.')
   const adjectiveCount = words.filter((word) => word.type === 'adj.').length
   await expect(page.locator('.word-item-card')).toHaveCount(adjectiveCount)
   await page.getByLabel('Tìm từ vựng', { exact: true }).fill('/ˈkeəfl/')
-  await expect(page.locator('.word-item-card')).toHaveCount(1)
+  await expect(page.locator('.word-item-card')).toHaveCount(2)
   await page
     .getByRole('button', { name: 'Nghe phát âm: careful', exact: true })
+    .first()
     .click()
   await expect
     .poll(() => page.evaluate(() => window.testSpoken))
     .toContain('careful')
+  await page.getByLabel('Bài học', { exact: true }).selectOption('bai1')
+  await expect(page.locator('.word-item-card')).toHaveCount(1)
+  await page.getByLabel('Bài học', { exact: true }).selectOption('bai2')
+  await expect(page.locator('.word-item-card')).toHaveCount(1)
+  await page.getByLabel('Tìm từ vựng', { exact: true }).fill('')
+  await page.getByLabel('Từ loại', { exact: true }).selectOption('all')
+  await page.getByLabel('Bài học', { exact: true }).selectOption('bai1')
+  await expect(page.locator('.word-item-card')).toHaveCount(lesson1Words.length)
+  await page.getByLabel('Bài học', { exact: true }).selectOption('bai2')
+  await expect(page.locator('.word-item-card')).toHaveCount(words.length - lesson1Words.length)
+  await page.getByLabel('Bài học', { exact: true }).selectOption('all')
+  await expect(page.locator('.word-item-card')).toHaveCount(words.length)
 })
 
 test('invalid saved data and empty mastered deck are handled', async ({

@@ -1,10 +1,13 @@
 import { test, expect } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { isFlashcardAnswerCorrect } from '../src/utils/flashcardAnswers.js'
+import { buildLessons } from '../src/data/lessons.js'
 
-const words = JSON.parse(
+const rawWords = JSON.parse(
   readFileSync(new URL('../src/data/words.json', import.meta.url), 'utf8'),
 )
+const words = Array.isArray(rawWords) ? rawWords : Object.values(rawWords).flat()
+const lesson1Words = buildLessons(words).find((l) => l.id === 'lesson-1').words
 
 test('flashcard answers accept English variants without accepting misspellings', () => {
   const cases = [
@@ -135,14 +138,14 @@ test.describe('flashcard direction controls', () => {
     const input = page.getByLabel('Nhập từ tiếng Anh', { exact: true })
     await expect(input).toHaveValue('')
     await expect(input).toBeFocused()
-    await expect(page.locator('.card-meta')).toContainText(`1 / ${words.length}`)
+    await expect(page.locator('.card-meta')).toContainText(`1 / ${lesson1Words.length}`)
     await expect(page.locator('.card-meta')).toContainText('Đúng 0/0')
     await expect(page.getByRole('button', { name: 'Đã thuộc', exact: true })).toHaveAttribute('aria-pressed', 'true')
     await input.fill('wrong')
     await input.press('Enter')
-    await expect(page.locator('.card-meta')).toContainText(`1 / ${words.length + 1}`)
+    await expect(page.locator('.card-meta')).toContainText(`1 / ${lesson1Words.length + 1}`)
     await page.getByRole('button', { name: 'Anh → Việt', exact: true }).click()
-    await expect(page.locator('.card-meta')).toContainText(`1 / ${words.length}`)
+    await expect(page.locator('.card-meta')).toContainText(`1 / ${lesson1Words.length}`)
     await expect(page.locator('.card-meta')).toContainText('Đúng 0/0')
     await expect(page.locator('.flashcard')).not.toHaveClass(/flipped/)
     await expect(page.getByLabel('Nhập nghĩa tiếng Việt')).toHaveValue('')
