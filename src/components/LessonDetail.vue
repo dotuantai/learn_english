@@ -1,19 +1,36 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import AppIcon from './AppIcon.vue'
 import FlashcardDirection from './FlashcardDirection.vue'
 import QuizSettings from './QuizSettings.vue'
+import WordTypeSelector from './WordTypeSelector.vue'
+import { TYPE_OPTIONS, matchesTypeFilter } from '../utils/typeFilter'
 const props = defineProps({
   lesson: { type: Object, required: true },
   initialMode: { type: String, default: 'flashcard' },
   initialDirection: { type: String, default: 'en_vi' },
+  wordType: { type: String, default: 'all' },
 })
-const emit = defineEmits(['start', 'back'])
+const emit = defineEmits(['start', 'back', 'change-type'])
 const mode = ref(props.initialMode)
 const flashcardDirection = ref(props.initialDirection)
 const quizType = ref('en_vi')
-const questionCount = ref(Math.min(10, props.lesson.words.length))
+const selectedWords = computed(() =>
+  props.lesson.words.filter((word) => matchesTypeFilter(word.type, props.wordType)),
+)
+const typeTitle = computed(() =>
+  TYPE_OPTIONS.find((type) => type.value === props.wordType)?.title || 'Tất cả từ loại',
+)
+const questionCount = ref(Math.min(10, selectedWords.value.length))
+const canStart = computed(() => selectedWords.value.length >= (mode.value === 'quiz' ? 4 : 1))
+watch(() => selectedWords.value.length, (count, previousCount) => {
+  // Keep "all questions" selected as the group changes; otherwise retain a valid preset.
+  if (questionCount.value === previousCount) questionCount.value = count
+  else if (![10, 20, count].includes(questionCount.value) || questionCount.value > count)
+    questionCount.value = Math.min(10, count)
+})
 function start() {
+  if (!canStart.value) return
   emit('start', {
     mode: mode.value,
     flashcardDirection: flashcardDirection.value,
@@ -58,13 +75,13 @@ function start() {
           <span :style="{ width: `${lesson.progress}%` }"></span>
         </div>
         <div class="preview-words">
-          <h2>Bạn sẽ học những từ như…</h2>
+          <h2>{{ wordType === 'all' ? 'Bạn sẽ học những từ như…' : `${typeTitle} bạn sẽ học` }}</h2>
           <div>
-            <span v-for="word in lesson.words.slice(0, 5)" :key="word.id">{{
+            <span v-for="word in selectedWords.slice(0, 5)" :key="word.id">{{
               word.word
             }}</span
-            ><span v-if="lesson.words.length > 5"
-              >+{{ lesson.words.length - 5 }} từ</span
+            ><span v-if="selectedWords.length > 5"
+              >+{{ selectedWords.length - 5 }} từ</span
             >
           </div>
         </div>
@@ -78,6 +95,11 @@ function start() {
         <span class="eyebrow">BƯỚC 02</span>
         <h2>Bạn muốn học thế nào?</h2>
         <p class="setup-description">Chọn cách học phù hợp với bạn hôm nay.</p>
+        <WordTypeSelector
+          :model-value="wordType"
+          :words="lesson.words"
+          @update:model-value="emit('change-type', $event)"
+        />
         <fieldset class="study-mode-options">
           <legend class="sr-only">Cách học</legend>
           <button
@@ -111,7 +133,7 @@ function start() {
           v-if="mode === 'quiz'"
           v-model:quiz-type="quizType"
           v-model:question-count="questionCount"
-          :word-count="lesson.words.length"
+          :word-count="selectedWords.length"
         />
         <template v-else>
           <FlashcardDirection v-model="flashcardDirection" />
@@ -127,11 +149,17 @@ function start() {
           </div>
         </template>
         <div class="start-area">
+          <p class="study-scope" role="status">{{ typeTitle }} · {{ selectedWords.length }}/{{ lesson.words.length }} từ trong bài</p>
+          <p v-if="!canStart" id="study-unavailable" class="study-unavailable" role="status">
+            {{ selectedWords.length === 0
+              ? 'Chưa có từ thuộc nhóm này. Hãy chọn từ loại khác để bắt đầu.'
+              : 'Trắc nghiệm cần ít nhất 4 từ. Bạn có thể học nhóm này bằng flashcards hoặc chọn từ loại khác.' }}
+          </p>
           <span
             ><AppIcon name="book" :size="16" />{{
               mode === 'quiz'
                 ? `${questionCount} câu hỏi`
-                : `${lesson.words.length} từ vựng`
+                : `${selectedWords.length} từ vựng`
             }}<span>·</span
             >{{
               mode === 'quiz' ? 'Kiểm tra & luyện lại' : 'Học & ôn tập'
@@ -139,10 +167,8 @@ function start() {
           ><button
             id="start-lesson"
             class="btn btn-primary"
-            :disabled="
-              lesson.words.length === 0 ||
-              (mode === 'quiz' && lesson.words.length < 4)
-            "
+            :disabled="!canStart"
+            :aria-describedby="!canStart ? 'study-unavailable' : undefined"
             @click="start"
           >
             Bắt đầu {{ mode === 'quiz' ? 'trắc nghiệm' : 'học flashcards'
@@ -292,7 +318,9 @@ function start() {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  margin: 27px 0;
+  margin: 25px 0;
+  padding-top: 25px;
+  border-top: 1px solid var(--border-subtle);
 }
 .study-mode-option {
   display: flex;
@@ -373,6 +401,19 @@ function start() {
   gap: 8px;
   color: var(--text-muted);
   font-size: 0.72rem;
+}
+.study-scope {
+  text-align: center;
+  color: var(--primary-dark);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.study-unavailable {
+  padding: 14px 17px;
+  border-radius: 18px;
+  color: var(--warning);
+  background: var(--warning-bg);
+  font-size: 0.78rem;
 }
 .start-area .btn {
   width: 100%;

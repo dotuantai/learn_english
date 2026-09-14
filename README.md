@@ -23,11 +23,17 @@ npm.cmd run preview
 
 ## Luồng học
 
-Trang tổng quan → chọn bài học → chọn flashcards hoặc trắc nghiệm → bắt đầu.
-Toàn bộ 52 từ vựng hiện tại thuộc **Bài 1 — Y tế & chăm sóc sức khỏe**, không
-chia thành các bài nhỏ theo chủ đề. Thư viện hỗ trợ tìm theo từ,
+Trang tổng quan → chọn bài học → chọn từ loại → chọn flashcards hoặc trắc nghiệm → bắt đầu.
+Từ vựng được tổ chức theo bài học. Thư viện hỗ trợ tìm theo từ,
 nghĩa, phiên âm, lọc từ loại và trạng thái. Tiến độ đã thuộc vẫn dùng khóa
 `medivocab_mastered` cũ trong localStorage; câu trả lời của buổi học chỉ giữ trong phiên.
+
+**Học theo từ loại:** chọn danh từ, động từ, tính từ, trạng từ, cụm từ hoặc
+tất cả ngay trong bước chuẩn bị. Mỗi nhóm hiển thị số từ của bài và cập nhật
+các từ mẫu. Flashcards và trắc nghiệm đều sử dụng nhóm đã chọn; từ có nhiều
+từ loại xuất hiện trong các nhóm tương ứng. Lựa chọn được giữ khi tải lại
+trang hoặc đổi cách học. Số câu hỏi tự điều chỉnh theo nhóm; trắc nghiệm
+cần ít nhất 4 từ, còn flashcards có thể học từ một từ.
 
 Flashcards hỗ trợ **Anh → Việt** (xem từ, gõ nghĩa) và **Việt → Anh** (xem
 nghĩa, gõ từ tiếng Anh). Chọn chiều ở bước chuẩn bị hoặc ngay trên bộ thẻ.
@@ -39,13 +45,13 @@ hoặc `painkillers`, `cavity / cavities` → `cavity` hoặc `cavities`.
 
 ## Thêm bài học sau này
 
-1. Thêm các từ mới vào `src/data/words.json`, dùng ID mới (từ 53 trở đi).
+1. Thêm các từ mới vào `src/data/words.json`, dùng ID mới chưa có trong dữ liệu.
 2. Thêm một mục vào `lessonDefinitions` trong `src/data/lessons.js`, với `id`
-   riêng (ví dụ `lesson-2`), tên bài, mô tả, biểu tượng, màu và `wordIds` chứa
+   riêng (ví dụ `lesson-3`), tên bài, mô tả, biểu tượng, màu và `wordIds` chứa
    ID các từ của bài đó.
 
 Danh sách bài học, số từ và tiến độ sẽ tự cập nhật theo dữ liệu. Bài 1 giữ các
-ID từ 1 đến 52; hiện chưa tạo bài khác khi chưa có dữ liệu.
+ID từ 1 đến 52; các bài mới dùng ID riêng để giữ đúng tiến độ đã lưu.
 
 ## Kiểm thử
 
@@ -55,7 +61,7 @@ npm.cmd test
 
 Playwright dùng Google Chrome đã cài, tự khởi động Vite nếu cần. Bộ kiểm thử
 bao gồm luồng vào bài, flashcards, bốn dạng trắc nghiệm, luyện lại câu sai,
-lưu tiến độ, tìm/lọc từ và giao diện ở bốn kích thước màn hình.
+lưu tiến độ, học theo từ loại, tìm/lọc từ và giao diện ở bốn kích thước màn hình.
 Lời gọi phát âm được giả lập để kiểm tra mà không phát âm thanh.
 
 Quy tắc giao diện và cấu trúc thành phần: [design-system/MASTER.md](design-system/MASTER.md).

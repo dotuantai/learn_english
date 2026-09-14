@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import rawWordsData from './data/words.json'
 import { buildLessons } from './data/lessons'
+import { TYPE_OPTIONS, matchesTypeFilter } from './utils/typeFilter'
 
 const wordsData = Array.isArray(rawWordsData)
   ? rawWordsData
@@ -87,8 +88,10 @@ const sessionOptions = ref({
   flashcardDirection: 'en_vi',
 })
 function readRoute() {
+  const [path, query = ''] = window.location.hash.replace(/^#\/?/, '').split('?')
   const [view = 'home', lessonId = 'all', mode = 'flashcard'] =
-    window.location.hash.replace(/^#\/?/, '').split('/')
+    path.split('/')
+  const requestedType = new URLSearchParams(query).get('type')
   const validView = [
     'home',
     'lessons',
@@ -103,6 +106,7 @@ function readRoute() {
     view: validView,
     lessonId,
     mode: mode === 'quiz' ? 'quiz' : 'flashcard',
+    wordType: TYPE_OPTIONS.some((type) => type.value === requestedType) ? requestedType : 'all',
   }
 }
 const currentLesson = computed(
@@ -110,6 +114,23 @@ const currentLesson = computed(
     lessons.value.find((lesson) => lesson.id === route.value.lessonId) ||
     allLesson.value,
 )
+// Depend on the stable word array, so marking mastery never restarts a filtered session.
+const currentLessonWords = computed(() => currentLesson.value.words)
+const studyWords = computed(() =>
+  currentLessonWords.value.filter((word) => matchesTypeFilter(word.type, route.value.wordType)),
+)
+const studyTypeTitle = computed(() =>
+  TYPE_OPTIONS.find((type) => type.value === route.value.wordType)?.title,
+)
+function withStudyType(path, wordType = route.value.wordType) {
+  return wordType === 'all' ? path : `${path}?type=${encodeURIComponent(wordType)}`
+}
+function changeWordType(wordType) {
+  if (!TYPE_OPTIONS.some((type) => type.value === wordType)) return
+  const path = window.location.hash.slice(1).split('?')[0]
+  window.history.replaceState(null, '', `#${withStudyType(path, wordType)}`)
+  route.value = readRoute()
+}
 const activeNavigation = computed(() =>
   route.value.view === 'lesson'
     ? route.value.lessonId === 'all'
@@ -142,10 +163,10 @@ function selectLesson(id) {
 }
 function startLesson(options) {
   sessionOptions.value = options
-  window.location.hash = `${options.mode}/${currentLesson.value.id}`
+  window.location.hash = withStudyType(`${options.mode}/${currentLesson.value.id}`)
 }
 function changeStudyMode() {
-  window.location.hash = `lesson/${currentLesson.value.id}/${route.value.view}`
+  window.location.hash = withStudyType(`lesson/${currentLesson.value.id}/${route.value.view}`)
 }
 function syncRoute() {
   route.value = readRoute()
@@ -212,6 +233,8 @@ onUnmounted(() => window.removeEventListener('hashchange', syncRoute))
           :lesson="currentLesson"
           :initial-mode="route.mode"
           :initial-direction="sessionOptions.flashcardDirection"
+          :word-type="route.wordType"
+          @change-type="changeWordType"
           @back="navigate('lessons')"
           @start="startLesson"
         />
@@ -223,22 +246,25 @@ onUnmounted(() => window.removeEventListener('hashchange', syncRoute))
               route.view === 'quiz' ? 'TRẮC NGHIỆM' : 'FLASHCARDS'
             }}</span>
             <h1>{{ currentLesson.title }}</h1>
+            <span v-if="route.wordType !== 'all'" class="badge session-type">
+              <AppIcon name="language" :size="15" />{{ studyTypeTitle }} · {{ studyWords.length }} từ
+            </span>
             <button class="text-link change-lesson" @click="changeStudyMode">
               Đổi cách học<AppIcon name="shuffle" :size="16" />
             </button>
           </div>
           <FlashcardMode
             v-if="route.view === 'flashcard'"
-            :key="`flashcard-${currentLesson.id}`"
-            :words="currentLesson.words"
+            :key="`flashcard-${currentLesson.id}-${route.wordType}`"
+            :words="studyWords"
             :mastered-ids="masteredIds"
             :initial-direction="sessionOptions.flashcardDirection"
             @change-direction="sessionOptions.flashcardDirection = $event"
             @toggle-mastered="toggleMastered"
             @back-to-lessons="navigate('lessons')" /><QuizMode
             v-else
-            :key="`quiz-${currentLesson.id}`"
-            :words="currentLesson.words"
+            :key="`quiz-${currentLesson.id}-${route.wordType}`"
+            :words="studyWords"
             :initial-options="sessionOptions"
             auto-start
             @back-to-lessons="navigate('lessons')"

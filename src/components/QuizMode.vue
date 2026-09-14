@@ -257,6 +257,10 @@ const resultEvaluation = computed(() => {
           v-model:question-count="questionCount"
           :word-count="words.length"
         />
+        <p v-if="words.length < 4" class="quiz-unavailable" role="status">
+          Trắc nghiệm cần ít nhất 4 từ. Chọn “Đổi cách học” để học bằng
+          flashcards hoặc chọn từ loại khác.
+        </p>
 
         <!-- Start Button -->
         <button
@@ -634,6 +638,13 @@ const resultEvaluation = computed(() => {
 </template>
 
 <style scoped>
+.quiz-unavailable {
+  padding: 14px 17px;
+  border-radius: 18px;
+  background: var(--warning-bg);
+  color: var(--warning);
+  font-size: 0.78rem;
+}
 .quiz-container {
   max-width: 780px;
   width: 100%;

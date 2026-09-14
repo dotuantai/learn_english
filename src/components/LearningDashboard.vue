@@ -55,7 +55,7 @@ const modes = [
         <p>
           {{
             lessonsOnly
-              ? 'Chọn bài học và học theo nhịp của bạn.'
+              ? 'Chọn bài học, từ loại và cách luyện tập phù hợp với bạn.'
               : 'Một chút mỗi ngày. Thêm một bước tự tin với tiếng Anh.'
           }}
         </p>

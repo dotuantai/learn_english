@@ -1,10 +1,10 @@
 export const TYPE_OPTIONS = [
-  { value: 'all', label: 'Tất cả từ loại' },
-  { value: 'n', label: 'Danh từ (n, n. phr, n/adj...)' },
-  { value: 'v', label: 'Động từ (v, v. phr...)' },
-  { value: 'adj', label: 'Tính từ (adj, adj. phr...)' },
-  { value: 'adv', label: 'Trạng từ (adv, adv/adj...)' },
-  { value: 'phr', label: 'Cụm từ (phr, n. phr, v. phr...)' },
+  { value: 'all', title: 'Tất cả từ loại', abbreviation: 'Aa', label: 'Tất cả từ loại' },
+  { value: 'n', title: 'Danh từ', abbreviation: 'n.', label: 'Danh từ (n, n. phr, n/adj...)' },
+  { value: 'v', title: 'Động từ', abbreviation: 'v.', label: 'Động từ (v, v. phr...)' },
+  { value: 'adj', title: 'Tính từ', abbreviation: 'adj.', label: 'Tính từ (adj, adj. phr...)' },
+  { value: 'adv', title: 'Trạng từ', abbreviation: 'adv.', label: 'Trạng từ (adv, adv/adj...)' },
+  { value: 'phr', title: 'Cụm từ', abbreviation: 'phr.', label: 'Cụm từ (phr, n. phr, v. phr...)' },
 ]
 
 export function matchesTypeFilter(wordType, selectedType) {
