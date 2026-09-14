@@ -38,14 +38,14 @@
     {
       "id": 6,
       "word": "detecting",
-      "type": "v-ing",
+      "type": "v.",
       "ipa": "/dɪˈtektɪŋ/",
       "meaning": "Phát hiện, nhận biết, dò tìm"
     },
     {
       "id": 7,
       "word": "symptoms",
-      "type": "n. (pl.)",
+      "type": "n.",
       "ipa": "/ˈsɪmptəmz/",
       "meaning": "Các triệu chứng (bệnh)"
     },
@@ -73,7 +73,7 @@
     {
       "id": 11,
       "word": "treated",
-      "type": "v-ed/adj.",
+      "type": "v.",
       "ipa": "/ˈtriːtɪd/",
       "meaning": "Được điều trị / Đã chữa trị"
     },
@@ -129,14 +129,14 @@
     {
       "id": 19,
       "word": "antibiotics",
-      "type": "n. (pl.)",
+      "type": "n.",
       "ipa": "/ˌæntibaɪˈɒtɪks/",
       "meaning": "Thuốc kháng sinh"
     },
     {
       "id": 20,
       "word": "prescribed",
-      "type": "v-ed/adj.",
+      "type": "v.",
       "ipa": "/prɪˈskraɪbd/",
       "meaning": "Được kê đơn, được chỉ định"
     },
@@ -241,7 +241,7 @@
     {
       "id": 35,
       "word": "explained",
-      "type": "v-ed",
+      "type": "v.",
       "ipa": "/ɪkˈspleɪnd/",
       "meaning": "Đã giải thích, giảng giải"
     },
@@ -346,21 +346,21 @@
     {
       "id": 50,
       "word": "ignored",
-      "type": "v-ed",
+      "type": "v.",
       "ipa": "/ɪɡˈnɔːd/",
       "meaning": "Bỏ qua, phớt lờ / Bị phớt lờ"
     },
     {
       "id": 51,
       "word": "skipped",
-      "type": "v-ed",
+      "type": "v.",
       "ipa": "/skɪpt/",
       "meaning": "Bỏ qua, nhảy cóc, không uống (thuốc)"
     },
     {
       "id": 52,
       "word": "received",
-      "type": "v-ed",
+      "type": "v.",
       "ipa": "/rɪˈsiːvd/",
       "meaning": "Đã nhận được"
     }
@@ -950,7 +950,7 @@
     {
       "id": 136,
       "word": "complaining",
-      "type": "adj./n.",
+      "type": "n./adj.",
       "ipa": "/kəmˈpleɪnɪŋ/",
       "meaning": "Hay phàn nàn, sự phàn nàn"
     },

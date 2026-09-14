@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import AppIcon from './AppIcon.vue'
 import { speakEnglish } from '../utils/speech'
+import { TYPE_OPTIONS, matchesTypeFilter } from '../utils/typeFilter'
 
 const props = defineProps({
   words: {
@@ -32,12 +33,7 @@ function resetFilters() {
   selectedLesson.value = 'all'
 }
 
-// Extract distinct types
-const distinctTypes = computed(() => {
-  const types = new Set()
-  props.words.forEach((w) => types.add(w.type))
-  return Array.from(types)
-})
+
 
 const lessonOptions = computed(() => {
   if (props.lessons && props.lessons.length > 0) {
@@ -70,8 +66,7 @@ const filteredWords = computed(() => {
       word.ipa.toLowerCase().includes(query)
 
     // 2. Type Filter
-    const matchesType =
-      selectedType.value === 'all' || word.type === selectedType.value
+    const matchesType = matchesTypeFilter(word.type, selectedType.value)
 
     // 3. Status Filter
     const isMastered = props.masteredIds.includes(word.id)
@@ -157,9 +152,12 @@ const filteredWords = computed(() => {
             v-model="selectedType"
             class="select-box"
           >
-            <option value="all">Tất cả từ loại</option>
-            <option v-for="t in distinctTypes" :key="t" :value="t">
-              {{ t }}
+            <option
+              v-for="t in TYPE_OPTIONS"
+              :key="t.value"
+              :value="t.value"
+            >
+              {{ t.label }}
             </option>
           </select>
         </div>

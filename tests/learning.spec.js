@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { buildLessons } from '../src/data/lessons.js'
+import { matchesTypeFilter } from '../src/utils/typeFilter.js'
 
 const rawWords = JSON.parse(
   readFileSync(new URL('../src/data/words.json', import.meta.url), 'utf8'),
@@ -213,8 +214,8 @@ test('library search, filters, empty state and persisted mastery remain availabl
   ).toBeVisible()
   await page.getByRole('button', { name: 'Xóa bộ lọc' }).click()
   await expect(page.locator('.word-item-card')).toHaveCount(words.length)
-  await page.getByLabel('Từ loại', { exact: true }).selectOption('adj.')
-  const adjectiveCount = words.filter((word) => word.type === 'adj.').length
+  await page.getByLabel('Từ loại', { exact: true }).selectOption('adj')
+  const adjectiveCount = words.filter((word) => matchesTypeFilter(word.type, 'adj')).length
   await expect(page.locator('.word-item-card')).toHaveCount(adjectiveCount)
   await page.getByLabel('Tìm từ vựng', { exact: true }).fill('/ˈkeəfl/')
   await expect(page.locator('.word-item-card')).toHaveCount(2)
@@ -237,6 +238,23 @@ test('library search, filters, empty state and persisted mastery remain availabl
   await expect(page.locator('.word-item-card')).toHaveCount(words.length - lesson1Words.length)
   await page.getByLabel('Bài học', { exact: true }).selectOption('all')
   await expect(page.locator('.word-item-card')).toHaveCount(words.length)
+})
+
+test('word type filter groups related types for n, v, adj, adv, phr', async ({
+  page,
+}) => {
+  await page.goto('/#list')
+  for (const group of ['n', 'v', 'adj', 'adv', 'phr']) {
+    await page.getByLabel('Từ loại', { exact: true }).selectOption(group)
+    const expectedCount = words.filter((word) => matchesTypeFilter(word.type, group)).length
+    await expect(page.locator('.word-item-card')).toHaveCount(expectedCount)
+  }
+  await page.getByLabel('Từ loại', { exact: true }).selectOption('n')
+  const visiblePills = await page.locator('.type-pill').allInnerTexts()
+  expect(visiblePills).toContain('n.')
+  expect(visiblePills).toContain('n. phr.')
+  expect(visiblePills).toContain('n./adj.')
+  expect(visiblePills).not.toContain('v.')
 })
 
 test('invalid saved data and empty mastered deck are handled', async ({
