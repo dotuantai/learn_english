@@ -93,12 +93,9 @@ test('mastered words are quiz targets even when fewer than four are marked', asy
     .click()
   await statusSelector.getByRole('button', { name: /^Đã thuộc/ }).click()
 
-  await expect(
-    page.getByRole('button', {
-      name: `Tất cả ${masteredAdverbs.length} câu`,
-      exact: true,
-    }),
-  ).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByLabel('Nhập số câu hỏi')).toHaveValue(
+    String(masteredAdverbs.length),
+  )
   await expect(
     page.getByRole('button', { name: 'Bắt đầu trắc nghiệm', exact: true }),
   ).toBeEnabled()

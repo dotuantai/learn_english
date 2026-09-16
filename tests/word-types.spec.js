@@ -87,9 +87,9 @@ test('filtered flashcards keep mastery, review, reload and navigation scoped to 
 for (const quizMode of ['Anh → Việt', 'Việt → Anh', 'Luyện nghe', 'Hỗn hợp']) {
   test(`filtered ${quizMode} quiz uses only the chosen group for questions, answers and replay`, async ({ page }) => {
     await page.goto('/#lesson/lesson-1/quiz')
-    await page.getByRole('button', { name: '20 câu', exact: true }).click()
+    await page.getByLabel('Nhập số câu hỏi').fill('20')
     await page.getByRole('button', { name: 'Trạng từ 5 từ', exact: true }).click()
-    await expect(page.getByRole('button', { name: 'Tất cả 5 câu', exact: true })).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.getByLabel('Nhập số câu hỏi')).toHaveValue('5')
     await page.getByRole('group', { name: 'Dạng bài trắc nghiệm', exact: true })
       .getByRole('button', { name: quizMode }).click()
     await page.getByRole('button', { name: 'Bắt đầu trắc nghiệm' }).click()
@@ -125,22 +125,27 @@ for (const quizMode of ['Anh → Việt', 'Việt → Anh', 'Luyện nghe', 'H�
       }
     }
     await page.getByRole('button', { name: 'Làm bài kiểm tra mới' }).click()
-    await expect(page.getByRole('button', { name: 'Tất cả 5 câu', exact: true })).toBeVisible()
+    await expect(page.getByLabel('Nhập số câu hỏi')).toHaveValue('5')
     await page.getByRole('button', { name: 'Đổi cách học' }).click()
     await expect(page.getByRole('button', { name: 'Trạng từ 5 từ', exact: true })).toHaveAttribute('aria-pressed', 'true')
   })
 }
 
-test('question presets remain selected when switching between differently sized groups', async ({ page }) => {
+test('custom question count stays valid when switching between differently sized groups', async ({ page }) => {
   await page.goto('/#lesson/lesson-1/quiz')
-  await page.getByRole('button', { name: 'Tất cả 52 câu', exact: true }).click()
+  const numberInput = page.getByLabel('Nhập số câu hỏi')
+  const slider = page.getByLabel('Chọn số lượng câu hỏi')
+  await numberInput.fill('52')
+  await expect(slider).toHaveValue('52')
   await page.getByRole('button', { name: 'Tính từ 8 từ', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Tất cả 8 câu', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(numberInput).toHaveValue('8')
+  await expect(slider).toHaveValue('8')
   await page.getByRole('button', { name: 'Danh từ 22 từ', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Tất cả 22 câu', exact: true })).toHaveAttribute('aria-pressed', 'true')
-  await page.getByRole('button', { name: '10 câu', exact: true }).click()
+  await expect(numberInput).toHaveValue('22')
+  await numberInput.fill('10')
   await page.getByRole('button', { name: 'Động từ 16 từ', exact: true }).click()
-  await expect(page.getByRole('button', { name: '10 câu', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(numberInput).toHaveValue('10')
+  await expect(slider).toHaveValue('10')
 })
 
 test('empty and small groups explain why study is unavailable and allow recovery', async ({ page }) => {

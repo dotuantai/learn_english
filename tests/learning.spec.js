@@ -128,9 +128,11 @@ test('quiz scoring, wrong-answer review, replay and return to lessons', async ({
   page,
 }) => {
   await page.goto('/#lesson/lesson-1/quiz')
-  await expect(
-    page.getByRole('button', { name: `Tất cả ${lesson1Words.length} câu`, exact: true }),
-  ).toBeVisible()
+  await expect(page.getByLabel('Nhập số câu hỏi')).toHaveValue('10')
+  await expect(page.getByLabel('Chọn số lượng câu hỏi')).toHaveAttribute(
+    'max',
+    String(lesson1Words.length),
+  )
   await page.getByRole('button', { name: 'Bắt đầu trắc nghiệm' }).click()
   for (let index = 0; index < 10; index += 1) {
     // Resolve each randomized question through its visible prompt.
@@ -163,9 +165,33 @@ test('quiz scoring, wrong-answer review, replay and return to lessons', async ({
   await expect(page.locator('.result-stats')).toContainText('100%')
   await expect(page.locator('.res-stat-box').last()).toContainText('1')
   await page.getByRole('button', { name: 'Làm bài kiểm tra mới' }).click()
-  await expect(
-    page.getByRole('button', { name: `Tất cả ${lesson1Words.length} câu`, exact: true }),
-  ).toBeVisible()
+  await expect(page.getByLabel('Nhập số câu hỏi')).toHaveValue('10')
+})
+
+test('quiz question count supports a synchronized slider and number input', async ({
+  page,
+}) => {
+  await page.goto('/#lesson/lesson-1/quiz')
+  const slider = page.getByLabel('Chọn số lượng câu hỏi')
+  const numberInput = page.getByLabel('Nhập số câu hỏi')
+
+  await expect(slider).toHaveValue('10')
+  await expect(numberInput).toHaveValue('10')
+
+  await slider.fill('17')
+  await expect(numberInput).toHaveValue('17')
+  await expect(page.locator('.start-area')).toContainText('17 câu hỏi')
+
+  await numberInput.fill('7')
+  await expect(slider).toHaveValue('7')
+
+  await numberInput.fill('999')
+  await expect(numberInput).toHaveValue(String(lesson1Words.length))
+  await expect(slider).toHaveValue(String(lesson1Words.length))
+
+  await numberInput.fill('0')
+  await expect(numberInput).toHaveValue('1')
+  await expect(slider).toHaveValue('1')
 })
 
 for (const mode of [
@@ -179,7 +205,7 @@ for (const mode of [
       .getByRole('group', { name: 'Dạng bài trắc nghiệm', exact: true })
       .getByRole('button', { name: mode.label })
       .click()
-    await page.getByRole('button', { name: '20 câu', exact: true }).click()
+    await page.getByLabel('Nhập số câu hỏi').fill('20')
     await page.getByRole('button', { name: 'Bắt đầu trắc nghiệm' }).click()
     await expect(page.locator(mode.selector)).toBeVisible()
     await expect(page.locator('.game-meta')).toContainText('/ 20')

@@ -44,10 +44,11 @@ const canStart = computed(() => {
   return mode.value !== 'quiz' || typeFilteredWords.value.length >= 4
 })
 watch(() => selectedWords.value.length, (count, previousCount) => {
-  // Keep "all questions" selected as the group changes; otherwise retain a valid preset.
-  if (questionCount.value === previousCount) questionCount.value = count
-  else if (![10, 20, count].includes(questionCount.value) || questionCount.value > count)
-    questionCount.value = Math.min(10, count)
+  // Keep "all questions" selected as the group changes; otherwise clamp the
+  // chosen custom value to the new range.
+  if (count === 0) questionCount.value = 0
+  else if (questionCount.value === previousCount) questionCount.value = count
+  else questionCount.value = Math.min(count, Math.max(1, questionCount.value))
 })
 function start() {
   if (!canStart.value) return
