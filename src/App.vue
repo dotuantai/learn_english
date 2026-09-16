@@ -3,6 +3,11 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import rawWordsData from './data/words.json'
 import { buildLessons } from './data/lessons'
 import { TYPE_OPTIONS, matchesTypeFilter } from './utils/typeFilter'
+import {
+  STUDY_STATUS_OPTIONS,
+  filterByStudyStatus,
+  isValidStudyStatus,
+} from './utils/studyStatus'
 
 const wordsData = Array.isArray(rawWordsData)
   ? rawWordsData
@@ -91,7 +96,9 @@ function readRoute() {
   const [path, query = ''] = window.location.hash.replace(/^#\/?/, '').split('?')
   const [view = 'home', lessonId = 'all', mode = 'flashcard'] =
     path.split('/')
-  const requestedType = new URLSearchParams(query).get('type')
+  const params = new URLSearchParams(query)
+  const requestedType = params.get('type')
+  const requestedStatus = params.get('status')
   const validView = [
     'home',
     'lessons',
@@ -107,6 +114,7 @@ function readRoute() {
     lessonId,
     mode: mode === 'quiz' ? 'quiz' : 'flashcard',
     wordType: TYPE_OPTIONS.some((type) => type.value === requestedType) ? requestedType : 'all',
+    wordStatus: isValidStudyStatus(requestedStatus) ? requestedStatus : 'all',
   }
 }
 const currentLesson = computed(
@@ -114,21 +122,50 @@ const currentLesson = computed(
     lessons.value.find((lesson) => lesson.id === route.value.lessonId) ||
     allLesson.value,
 )
-// Depend on the stable word array, so marking mastery never restarts a filtered session.
+// Keep the type-filtered pool stable when mastery changes. Flashcards create their
+// own status-filtered session from this pool, while quizzes receive filtered targets.
 const currentLessonWords = computed(() => currentLesson.value.words)
-const studyWords = computed(() =>
+const studyPoolWords = computed(() =>
   currentLessonWords.value.filter((word) => matchesTypeFilter(word.type, route.value.wordType)),
+)
+const studyWords = computed(() =>
+  filterByStudyStatus(
+    studyPoolWords.value,
+    route.value.wordStatus,
+    masteredIds.value,
+  ),
 )
 const studyTypeTitle = computed(() =>
   TYPE_OPTIONS.find((type) => type.value === route.value.wordType)?.title,
 )
-function withStudyType(path, wordType = route.value.wordType) {
-  return wordType === 'all' ? path : `${path}?type=${encodeURIComponent(wordType)}`
+const studyStatusTitle = computed(() =>
+  STUDY_STATUS_OPTIONS.find((status) => status.value === route.value.wordStatus)?.title,
+)
+function withStudyFilters(
+  path,
+  wordType = route.value.wordType,
+  wordStatus = route.value.wordStatus,
+) {
+  const params = new URLSearchParams()
+  if (wordType !== 'all') params.set('type', wordType)
+  if (wordStatus !== 'all') params.set('status', wordStatus)
+  const query = params.toString()
+  return query ? `${path}?${query}` : path
 }
 function changeWordType(wordType) {
   if (!TYPE_OPTIONS.some((type) => type.value === wordType)) return
   const path = window.location.hash.slice(1).split('?')[0]
-  window.history.replaceState(null, '', `#${withStudyType(path, wordType)}`)
+  window.history.replaceState(null, '', `#${withStudyFilters(path, wordType)}`)
+  route.value = readRoute()
+}
+function changeStudyStatus(wordStatus) {
+  if (!isValidStudyStatus(wordStatus)) return
+  const path = window.location.hash.slice(1).split('?')[0]
+  window.history.replaceState(
+    null,
+    '',
+    `#${withStudyFilters(path, route.value.wordType, wordStatus)}`,
+  )
   route.value = readRoute()
 }
 const activeNavigation = computed(() =>
@@ -163,10 +200,16 @@ function selectLesson(id) {
 }
 function startLesson(options) {
   sessionOptions.value = options
-  window.location.hash = withStudyType(`${options.mode}/${currentLesson.value.id}`)
+  window.location.hash = withStudyFilters(
+    `${options.mode}/${currentLesson.value.id}`,
+    route.value.wordType,
+    options.wordStatus,
+  )
 }
 function changeStudyMode() {
-  window.location.hash = withStudyType(`lesson/${currentLesson.value.id}/${route.value.view}`)
+  window.location.hash = withStudyFilters(
+    `lesson/${currentLesson.value.id}/${route.value.view}`,
+  )
 }
 function syncRoute() {
   route.value = readRoute()
@@ -234,7 +277,10 @@ onUnmounted(() => window.removeEventListener('hashchange', syncRoute))
           :initial-mode="route.mode"
           :initial-direction="sessionOptions.flashcardDirection"
           :word-type="route.wordType"
+          :word-status="route.wordStatus"
+          :mastered-ids="masteredIds"
           @change-type="changeWordType"
+          @change-status="changeStudyStatus"
           @back="navigate('lessons')"
           @start="startLesson"
         />
@@ -247,7 +293,11 @@ onUnmounted(() => window.removeEventListener('hashchange', syncRoute))
             }}</span>
             <h1>{{ currentLesson.title }}</h1>
             <span v-if="route.wordType !== 'all'" class="badge session-type">
-              <AppIcon name="language" :size="15" />{{ studyTypeTitle }} · {{ studyWords.length }} từ
+              <AppIcon name="language" :size="15" />{{ studyTypeTitle }} · {{ studyPoolWords.length }} từ
+            </span>
+            <span v-if="route.wordStatus !== 'all'" class="badge session-status">
+              <AppIcon :name="route.wordStatus === 'mastered' ? 'star' : 'pulse'" :size="15" />
+              {{ studyStatusTitle }} · {{ studyWords.length }} từ
             </span>
             <button class="text-link change-lesson" @click="changeStudyMode">
               Đổi cách học<AppIcon name="shuffle" :size="16" />
@@ -255,16 +305,18 @@ onUnmounted(() => window.removeEventListener('hashchange', syncRoute))
           </div>
           <FlashcardMode
             v-if="route.view === 'flashcard'"
-            :key="`flashcard-${currentLesson.id}-${route.wordType}`"
-            :words="studyWords"
+            :key="`flashcard-${currentLesson.id}-${route.wordType}-${route.wordStatus}`"
+            :words="studyPoolWords"
             :mastered-ids="masteredIds"
             :initial-direction="sessionOptions.flashcardDirection"
+            :initial-filter="route.wordStatus"
             @change-direction="sessionOptions.flashcardDirection = $event"
             @toggle-mastered="toggleMastered"
             @back-to-lessons="navigate('lessons')" /><QuizMode
             v-else
-            :key="`quiz-${currentLesson.id}-${route.wordType}`"
+            :key="`quiz-${currentLesson.id}-${route.wordType}-${route.wordStatus}`"
             :words="studyWords"
+            :distractor-words="studyPoolWords"
             :initial-options="sessionOptions"
             auto-start
             @back-to-lessons="navigate('lessons')"

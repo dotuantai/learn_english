@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import AppIcon from './AppIcon.vue'
 import FlashcardDirection from './FlashcardDirection.vue'
 import { speakEnglish } from '../utils/speech'
+import { isValidStudyStatus } from '../utils/studyStatus'
 import {
   isFlashcardAnswerCorrect,
   normalizeAnswer,
@@ -12,6 +13,7 @@ const props = defineProps({
   words: { type: Array, required: true },
   masteredIds: { type: Array, default: () => [] },
   initialDirection: { type: String, default: 'en_vi' },
+  initialFilter: { type: String, default: 'all' },
 })
 const emit = defineEmits([
   'toggle-mastered',
@@ -27,7 +29,9 @@ const answerLabel = computed(() =>
 const answerLanguage = computed(() =>
   isReverse.value ? 'từ tiếng Anh' : 'nghĩa tiếng Việt',
 )
-const filterMode = ref('all')
+const filterMode = ref(
+  isValidStudyStatus(props.initialFilter) ? props.initialFilter : 'all',
+)
 const isShuffleEnabled = ref(false)
 const cards = ref([])
 const currentIndex = ref(0)

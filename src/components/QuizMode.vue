@@ -14,6 +14,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  distractorWords: {
+    type: Array,
+    default: () => [],
+  },
 })
 
 // Quiz States: 'setup' | 'playing' | 'completed'
@@ -49,10 +53,13 @@ const quizProgress = computed(() => {
   if (questions.value.length === 0) return 0
   return Math.round((currentQuestionIndex.value / questions.value.length) * 100)
 })
+const optionPool = computed(() =>
+  props.distractorWords.length ? props.distractorWords : props.words,
+)
 
 // Generate Quiz Questions
 function startQuiz() {
-  if (props.words.length < 4) return
+  if (props.words.length === 0 || optionPool.value.length < 4) return
 
   // 1. Shuffle word list
   const shuffledWords = [...props.words].sort(() => 0.5 - Math.random())
@@ -70,7 +77,7 @@ function startQuiz() {
     }
 
     // Pick 3 distractors
-    const otherWords = props.words.filter((w) => w.id !== targetWord.id)
+    const otherWords = optionPool.value.filter((w) => w.id !== targetWord.id)
     const shuffledOthers = [...otherWords].sort(() => 0.5 - Math.random())
     const distractors = shuffledOthers.slice(0, 3)
 
@@ -157,7 +164,7 @@ function retryWrongQuestions() {
   const wrongTargets = incorrectAnswers.value.map((item) => item.target)
   questions.value = wrongTargets.map((targetWord) => {
     let mode = quizType.value === 'mixed' ? 'en_vi' : quizType.value
-    const otherWords = props.words.filter((w) => w.id !== targetWord.id)
+    const otherWords = optionPool.value.filter((w) => w.id !== targetWord.id)
     const distractors = [...otherWords]
       .sort(() => 0.5 - Math.random())
       .slice(0, 3)
@@ -246,7 +253,7 @@ const resultEvaluation = computed(() => {
         </div>
         <h2 class="setup-title">Kiểm Tra Trắc Nghiệm</h2>
         <p class="setup-subtitle">
-          {{ words.length }} từ vựng trong bài học này
+          {{ words.length }} từ vựng trong nhóm đã chọn
         </p>
       </div>
 
@@ -257,16 +264,23 @@ const resultEvaluation = computed(() => {
           v-model:question-count="questionCount"
           :word-count="words.length"
         />
-        <p v-if="words.length < 4" class="quiz-unavailable" role="status">
-          Trắc nghiệm cần ít nhất 4 từ. Chọn “Đổi cách học” để học bằng
-          flashcards hoặc chọn từ loại khác.
+        <p
+          v-if="words.length === 0 || optionPool.length < 4"
+          class="quiz-unavailable"
+          role="status"
+        >
+          {{
+            words.length === 0
+              ? 'Chưa có từ trong nhóm đã chọn. Hãy đổi nhóm từ để bắt đầu.'
+              : 'Trắc nghiệm cần ít nhất 4 từ trong nhóm từ loại để tạo các phương án trả lời. Chọn “Đổi cách học” để học bằng flashcards hoặc chọn từ loại khác.'
+          }}
         </p>
 
         <!-- Start Button -->
         <button
           id="btn-start-quiz"
           class="start-quiz-btn"
-          :disabled="words.length < 4"
+          :disabled="words.length === 0 || optionPool.length < 4"
           @click="startQuiz"
         >
           <span>Bắt đầu làm bài</span>

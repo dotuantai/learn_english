@@ -3,26 +3,46 @@ import { computed, ref, watch } from 'vue'
 import AppIcon from './AppIcon.vue'
 import FlashcardDirection from './FlashcardDirection.vue'
 import QuizSettings from './QuizSettings.vue'
+import StudyStatusSelector from './StudyStatusSelector.vue'
 import WordTypeSelector from './WordTypeSelector.vue'
 import { TYPE_OPTIONS, matchesTypeFilter } from '../utils/typeFilter'
+import {
+  STUDY_STATUS_OPTIONS,
+  filterByStudyStatus,
+} from '../utils/studyStatus'
 const props = defineProps({
   lesson: { type: Object, required: true },
   initialMode: { type: String, default: 'flashcard' },
   initialDirection: { type: String, default: 'en_vi' },
   wordType: { type: String, default: 'all' },
+  wordStatus: { type: String, default: 'all' },
+  masteredIds: { type: Array, default: () => [] },
 })
-const emit = defineEmits(['start', 'back', 'change-type'])
+const emit = defineEmits(['start', 'back', 'change-type', 'change-status'])
 const mode = ref(props.initialMode)
 const flashcardDirection = ref(props.initialDirection)
 const quizType = ref('en_vi')
-const selectedWords = computed(() =>
+const typeFilteredWords = computed(() =>
   props.lesson.words.filter((word) => matchesTypeFilter(word.type, props.wordType)),
+)
+const selectedWords = computed(() =>
+  filterByStudyStatus(
+    typeFilteredWords.value,
+    props.wordStatus,
+    props.masteredIds,
+  ),
 )
 const typeTitle = computed(() =>
   TYPE_OPTIONS.find((type) => type.value === props.wordType)?.title || 'Tất cả từ loại',
 )
+const statusTitle = computed(() =>
+  STUDY_STATUS_OPTIONS.find((status) => status.value === props.wordStatus)?.title || 'Tất cả',
+)
 const questionCount = ref(Math.min(10, selectedWords.value.length))
-const canStart = computed(() => selectedWords.value.length >= (mode.value === 'quiz' ? 4 : 1))
+const canStart = computed(() => {
+  if (selectedWords.value.length === 0) return false
+  return mode.value !== 'quiz' || typeFilteredWords.value.length >= 4
+})
 watch(() => selectedWords.value.length, (count, previousCount) => {
   // Keep "all questions" selected as the group changes; otherwise retain a valid preset.
   if (questionCount.value === previousCount) questionCount.value = count
@@ -36,6 +56,7 @@ function start() {
     flashcardDirection: flashcardDirection.value,
     quizType: quizType.value,
     questionCount: questionCount.value,
+    wordStatus: props.wordStatus,
   })
 }
 </script>
@@ -75,7 +96,7 @@ function start() {
           <span :style="{ width: `${lesson.progress}%` }"></span>
         </div>
         <div class="preview-words">
-          <h2>{{ wordType === 'all' ? 'Bạn sẽ học những từ như…' : `${typeTitle} bạn sẽ học` }}</h2>
+          <h2>Những từ bạn sẽ học…</h2>
           <div>
             <span v-for="word in selectedWords.slice(0, 5)" :key="word.id">{{
               word.word
@@ -99,6 +120,12 @@ function start() {
           :model-value="wordType"
           :words="lesson.words"
           @update:model-value="emit('change-type', $event)"
+        />
+        <StudyStatusSelector
+          :model-value="wordStatus"
+          :words="typeFilteredWords"
+          :mastered-ids="masteredIds"
+          @update:model-value="emit('change-status', $event)"
         />
         <fieldset class="study-mode-options">
           <legend class="sr-only">Cách học</legend>
@@ -149,11 +176,16 @@ function start() {
           </div>
         </template>
         <div class="start-area">
-          <p class="study-scope" role="status">{{ typeTitle }} · {{ selectedWords.length }}/{{ lesson.words.length }} từ trong bài</p>
+          <p class="study-scope" role="status">
+            {{ typeTitle }}{{ wordStatus === 'all' ? '' : ` · ${statusTitle}` }} ·
+            {{ selectedWords.length }}/{{ lesson.words.length }} từ trong bài
+          </p>
           <p v-if="!canStart" id="study-unavailable" class="study-unavailable" role="status">
             {{ selectedWords.length === 0
-              ? 'Chưa có từ thuộc nhóm này. Hãy chọn từ loại khác để bắt đầu.'
-              : 'Trắc nghiệm cần ít nhất 4 từ. Bạn có thể học nhóm này bằng flashcards hoặc chọn từ loại khác.' }}
+              ? wordStatus === 'mastered'
+                ? 'Bạn chưa đánh dấu từ nào là đã thuộc trong nhóm này.'
+                : 'Chưa có từ thuộc nhóm này. Hãy chọn nhóm khác để bắt đầu.'
+              : 'Trắc nghiệm cần ít nhất 4 từ trong nhóm từ loại để tạo các phương án trả lời. Bạn có thể học nhóm này bằng flashcards hoặc chọn từ loại khác.' }}
           </p>
           <span
             ><AppIcon name="book" :size="16" />{{
