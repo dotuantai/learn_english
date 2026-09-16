@@ -18,7 +18,7 @@ const items = [
 <template>
   <aside class="sidebar clay-card">
     <a class="brand" href="#home" aria-label="MyHoa — Tổng quan"
-      ><span class="brand-mark"><img src="/myhoa.webp" alt="Logo MyHoa" width="48" height="48" /></span
+      ><span class="brand-mark"><img src="/logo.svg" alt="Logo MyHoa" width="48" height="48" /></span
       ><span
         ><strong>My<span>Hoa</span></strong
         ><small>HỌC NHẸ NHÀNG, NHỚ THẬT LÂU</small></span
@@ -61,7 +61,7 @@ const items = [
   </aside>
   <header class="mobile-header">
     <a class="brand" href="#home" aria-label="MyHoa — Tổng quan"
-      ><span class="brand-mark"><img src="/myhoa.webp" alt="Logo MyHoa" width="48" height="48" /></span
+      ><span class="brand-mark"><img src="/logo.svg" alt="Logo MyHoa" width="48" height="48" /></span
       ><strong>My<span>Hoa</span></strong></a
     ><span class="badge"
       ><AppIcon name="star" :size="16" />{{ masteredCount }}/{{

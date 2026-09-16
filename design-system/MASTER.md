@@ -11,7 +11,7 @@ Vue 3 Composition API, scoped CSS, and shared CSS custom properties. The user's 
 - Nunito 700–900 for headings and controls; DM Sans for body text. System fallbacks remain available.
 - Shared card, button, pressed and icon shadows simulate matte clay with inset and outer layers.
 - Cards use 28–40px radii; controls use 20px radii; circular indicators remain circular.
-- CSS-built book and medical kit hero illustration. The user-provided `public/myhoa.webp` is the desktop/mobile logo and browser favicon; its original image is preserved. No new runtime dependency.
+- CSS-built book and medical kit hero illustration. The brand logo `public/logo.svg` (blooming book & knowledge petals in digital clay style) serves as the desktop/mobile logo and browser favicon; the original `public/myhoa.webp` is preserved in the source. No new runtime dependency.
 - Visible keyboard focus, 44px minimum control targets, reduced-motion support and decorative SVGs hidden from assistive technology.
 
 ## Learning flow
