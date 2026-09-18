@@ -3,7 +3,8 @@
 **MyHoa** là cách viết liền, không dấu của tên **Mỹ Hòa**, mang ý nghĩa vẻ đẹp
 và sự hài hòa. Một không gian học tiếng Anh nhẹ nhàng, theo nhịp của bạn.
 
-Ứng dụng Vue 3 sử dụng JavaScript và Vite.
+Ứng dụng Vue 3 sử dụng JavaScript và Vite, lấy bài học và từ vựng từ ASP.NET
+Core API/PostgreSQL. Không còn dữ liệu học tĩnh trong bundle frontend.
 
 ## Chạy dự án
 
@@ -11,6 +12,10 @@ và sự hài hòa. Một không gian học tiếng Anh nhẹ nhàng, theo nhị
 npm.cmd install
 npm.cmd run dev
 ```
+
+Mặc định Vite proxy `/api` đến backend tại `http://localhost:5262`. Hãy chạy
+backend và áp dụng EF migration trước khi mở frontend. Khi deploy khác domain,
+đặt `VITE_API_BASE_URL` thành URL public của backend.
 
 ## Các lệnh khác
 
@@ -26,7 +31,17 @@ npm.cmd run preview
 Trang tổng quan → chọn bài học → chọn từ loại → chọn flashcards hoặc trắc nghiệm → bắt đầu.
 Từ vựng được tổ chức theo bài học. Thư viện hỗ trợ tìm theo từ,
 nghĩa, phiên âm, lọc từ loại và trạng thái. Tiến độ đã thuộc vẫn dùng khóa
-`medivocab_mastered` cũ trong localStorage; câu trả lời của buổi học chỉ giữ trong phiên.
+`medivocab_mastered` cũ trong localStorage để khách có thể học ngay; sau khi
+đăng nhập, tiến độ cục bộ được gộp và đồng bộ vào PostgreSQL theo tài khoản.
+Câu trả lời của buổi học chỉ giữ trong phiên như trước.
+
+## Tài khoản
+
+- `#login`: đăng nhập bằng email/mật khẩu.
+- `#register`: tạo tài khoản và đăng nhập ngay sau khi thành công.
+- Access token hết hạn được làm mới bằng refresh token hiện có của backend.
+- Đăng xuất thu hồi refresh token ở server nhưng vẫn giữ tiến độ offline trên
+  thiết bị, vì vậy người học không mất chức năng cũ.
 
 **Học theo từ loại:** chọn danh từ, động từ, tính từ, trạng từ, cụm từ hoặc
 tất cả ngay trong bước chuẩn bị. Mỗi nhóm hiển thị số từ của bài và cập nhật
@@ -45,10 +60,9 @@ hoặc `painkillers`, `cavity / cavities` → `cavity` hoặc `cavities`.
 
 ## Thêm bài học sau này
 
-1. Thêm các từ mới vào `src/data/words.json`, dùng ID mới chưa có trong dữ liệu.
-2. Thêm một mục vào `lessonDefinitions` trong `src/data/lessons.js`, với `id`
-   riêng (ví dụ `lesson-3`), tên bài, mô tả, biểu tượng, màu và `wordIds` chứa
-   ID các từ của bài đó.
+1. Thêm lesson/word vào seed hoặc luồng quản trị ở backend; mỗi từ dùng ID mới.
+2. Tạo EF Core migration mới và chạy `dotnet ef database update`.
+3. API `GET /api/learning` tự trả dữ liệu mới; frontend không cần thêm file JSON.
 
 Danh sách bài học, số từ và tiến độ sẽ tự cập nhật theo dữ liệu. Bài 1 giữ các
 ID từ 1 đến 52; các bài mới dùng ID riêng để giữ đúng tiến độ đã lưu.
@@ -59,9 +73,10 @@ ID từ 1 đến 52; các bài mới dùng ID riêng để giữ đúng tiến �
 npm.cmd test
 ```
 
-Playwright dùng Google Chrome đã cài, tự khởi động Vite nếu cần. Bộ kiểm thử
+Playwright dùng Google Chrome đã cài, tự khởi động Vite với mock API nếu cần. Bộ kiểm thử
 bao gồm luồng vào bài, flashcards, bốn dạng trắc nghiệm, luyện lại câu sai,
-lưu tiến độ, học theo từ loại, tìm/lọc từ và giao diện ở bốn kích thước màn hình.
+lưu/đồng bộ tiến độ, login/register, học theo từ loại, tìm/lọc từ và giao diện
+responsive.
 Lời gọi phát âm được giả lập để kiểm tra mà không phát âm thanh.
 
 Quy tắc giao diện và cấu trúc thành phần: [design-system/MASTER.md](design-system/MASTER.md).

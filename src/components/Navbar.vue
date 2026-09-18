@@ -5,8 +5,9 @@ defineProps({
   currentMode: { type: String, required: true },
   masteredCount: { type: Number, default: 0 },
   totalWords: { type: Number, default: 0 },
+  user: { type: Object, default: null },
 })
-defineEmits(['change-mode'])
+defineEmits(['change-mode', 'login', 'logout'])
 const items = [
   { id: 'home', label: 'Tổng quan', icon: 'home' },
   { id: 'lessons', label: 'Bài học', icon: 'book' },
@@ -57,18 +58,33 @@ const items = [
         </div>
         <AppIcon name="sparkles" :size="17" />
       </div>
+      <div v-if="user" class="sidebar-auth signed-in">
+        <span class="account-avatar"><AppIcon name="user" :size="18" /></span>
+        <div><small>ĐANG ĐỒNG BỘ</small><strong :title="user.email">{{ user.email }}</strong></div>
+        <button type="button" aria-label="Đăng xuất" title="Đăng xuất" @click="$emit('logout')">
+          <AppIcon name="logout" :size="18" />
+        </button>
+      </div>
+      <button v-else class="sidebar-auth sign-in" type="button" @click="$emit('login')">
+        <span class="account-avatar"><AppIcon name="user" :size="18" /></span>
+        <span><strong>Đăng nhập</strong><small>Đồng bộ tiến độ học</small></span>
+        <AppIcon name="arrow" :size="17" />
+      </button>
     </div>
   </aside>
   <header class="mobile-header">
     <a class="brand" href="#home" aria-label="MyHoa — Tổng quan"
       ><span class="brand-mark"><img src="/logo.svg" alt="Logo MyHoa" width="48" height="48" /></span
       ><strong>My<span>Hoa</span></strong></a
-    ><span class="badge"
-      ><AppIcon name="star" :size="16" />{{ masteredCount }}/{{
-        totalWords
-      }}
-      từ</span
-    >
+    ><div class="mobile-actions">
+      <span class="badge"><AppIcon name="star" :size="16" />{{ masteredCount }}/{{ totalWords }} từ</span>
+      <button
+        type="button"
+        :aria-label="user ? 'Đăng xuất' : 'Đăng nhập'"
+        class="mobile-auth-button"
+        @click="$emit(user ? 'logout' : 'login')"
+      ><AppIcon :name="user ? 'logout' : 'user'" :size="18" /></button>
+    </div>
   </header>
   <nav v-if="!studying" class="mobile-nav clay-card" aria-label="Điều hướng di động">
     <button
@@ -91,6 +107,11 @@ const items = [
   padding: 30px 18px 20px;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.sidebar::-webkit-scrollbar {
+  display: none;
 }
 .brand {
   display: flex;
@@ -253,6 +274,76 @@ const items = [
   margin-left: auto;
   color: var(--primary);
 }
+.sidebar-auth {
+  width: 100%;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+  padding: 9px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 19px;
+  color: var(--text-main);
+  background: #f8f4fb;
+}
+.sidebar-auth.sign-in {
+  text-align: left;
+}
+.sidebar-auth.sign-in:hover {
+  color: var(--primary-dark);
+  background: var(--primary-bg);
+}
+.account-avatar {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--primary-dark);
+  background: #e8ddf7;
+  border-radius: 14px;
+}
+.sidebar-auth div,
+.sidebar-auth.sign-in > span:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+}
+.sidebar-auth strong,
+.sidebar-auth small {
+  display: block;
+}
+.sidebar-auth strong {
+  overflow: hidden;
+  font-size: 0.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sidebar-auth small {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.53rem;
+}
+.sidebar-auth.signed-in small {
+  color: var(--success);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+.sidebar-auth.signed-in > button {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 14px;
+  color: var(--text-muted);
+  background: transparent;
+}
+.sidebar-auth.signed-in > button:hover {
+  color: var(--danger);
+  background: var(--danger-bg);
+}
 .mini-avatar {
   display: grid;
   place-items: center;
@@ -265,6 +356,22 @@ const items = [
 .mobile-header,
 .mobile-nav {
   display: none;
+}
+.mobile-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.mobile-auth-button {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  color: var(--primary-dark);
+  background: #f8f3ff;
+  box-shadow: var(--shadow-orb);
 }
 @media (max-width: 1100px) and (min-width: 769px) {
   .sidebar {
@@ -297,6 +404,14 @@ const items = [
   }
   .sidebar-bottom {
     padding-top: 35px;
+  }
+}
+@media (max-height: 850px) and (min-width: 769px) {
+  .little-reminder {
+    display: none;
+  }
+  .sidebar-bottom {
+    padding-top: 20px;
   }
 }
 @media (max-width: 768px) {

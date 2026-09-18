@@ -1,10 +1,8 @@
 import { test, expect } from '@playwright/test'
-import { readFileSync } from 'node:fs'
-import { buildLessons } from '../src/data/lessons.js'
+import { buildLessons } from '../src/utils/lessons.js'
+import { learningContent, words } from './fixtures/learningContent.js'
 
-const rawWords = JSON.parse(readFileSync(new URL('../src/data/words.json', import.meta.url), 'utf8'))
-const words = Array.isArray(rawWords) ? rawWords : Object.values(rawWords).flat()
-const lessons = buildLessons(words)
+const lessons = buildLessons(learningContent.lessons)
 const lessonWords = lessons[0].words
 const adverbs = lessonWords.filter((word) => word.type.split(/[./\s]+/).includes('adv'))
 const groups = [
@@ -149,10 +147,17 @@ test('custom question count stays valid when switching between differently sized
 })
 
 test('empty and small groups explain why study is unavailable and allow recovery', async ({ page }) => {
-  const fixture = { bai1: [lessonWords[0], lessonWords[1], lessonWords[2]], bai2: [] }
-  await page.route('**/src/data/words.json*', (route) => route.fulfill({
-    contentType: 'application/javascript',
-    body: `export default ${JSON.stringify(fixture)}`,
+  const fixture = {
+    lessons: learningContent.lessons.map((lesson) => ({
+      ...lesson,
+      words: lesson.id === 'lesson-1'
+        ? [lessonWords[0], lessonWords[1], lessonWords[2]]
+        : [],
+    })),
+  }
+  await page.route('**/api/learning', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify(fixture),
   }))
   await page.goto('/#lesson/lesson-1/quiz?type=adv')
   await expect(page.getByRole('button', { name: 'Trạng từ 1 từ', exact: true })).toHaveAttribute('aria-pressed', 'true')

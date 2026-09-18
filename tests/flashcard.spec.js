@@ -1,13 +1,11 @@
 import { test, expect } from '@playwright/test'
-import { readFileSync } from 'node:fs'
 import { isFlashcardAnswerCorrect } from '../src/utils/flashcardAnswers.js'
-import { buildLessons } from '../src/data/lessons.js'
+import { buildLessons } from '../src/utils/lessons.js'
+import { learningContent, words } from './fixtures/learningContent.js'
 
-const rawWords = JSON.parse(
-  readFileSync(new URL('../src/data/words.json', import.meta.url), 'utf8'),
-)
-const words = Array.isArray(rawWords) ? rawWords : Object.values(rawWords).flat()
-const lesson1Words = buildLessons(words).find((l) => l.id === 'lesson-1').words
+const lesson1Words = buildLessons(learningContent.lessons).find(
+  (lesson) => lesson.id === 'lesson-1',
+).words
 
 test('flashcard answers accept English variants without accepting misspellings', () => {
   const cases = [

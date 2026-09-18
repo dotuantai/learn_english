@@ -1,7 +1,7 @@
 <script setup>
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import rawWordsData from './data/words.json'
-import { buildLessons } from './data/lessons'
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
+import { buildLessons } from './utils/lessons'
+import { authApi, clearAuthSession, getAuthSession, learningApi } from './services/api'
 import { TYPE_OPTIONS, matchesTypeFilter } from './utils/typeFilter'
 import {
   STUDY_STATUS_OPTIONS,
@@ -9,25 +9,33 @@ import {
   isValidStudyStatus,
 } from './utils/studyStatus'
 
-const wordsData = Array.isArray(rawWordsData)
-  ? rawWordsData
-  : Object.entries(rawWordsData).flatMap(([lessonKey, list]) =>
-      list.map((item) => ({ ...item, lessonKey })),
-    )
 import Navbar from './components/Navbar.vue'
 import AppIcon from './components/AppIcon.vue'
+import AuthPage from './components/AuthPage.vue'
 import LearningDashboard from './components/LearningDashboard.vue'
 import LessonDetail from './components/LessonDetail.vue'
 import FlashcardMode from './components/FlashcardMode.vue'
 import QuizMode from './components/QuizMode.vue'
 import WordListMode from './components/WordListMode.vue'
 
-const validIds = new Set(wordsData.map((word) => word.id))
+const sourceLessons = shallowRef([])
+const wordsData = computed(() =>
+  sourceLessons.value.flatMap((lesson) =>
+    lesson.words.map((word) => ({ ...word, lessonKey: lesson.key })),
+  ),
+)
+const validIds = computed(() => new Set(wordsData.value.map((word) => word.id)))
+const contentLoading = ref(true)
+const contentError = ref('')
+const currentUser = ref(null)
+const authBusy = ref(false)
+const authError = ref('')
+
 function loadMastered() {
   try {
     const saved = JSON.parse(localStorage.getItem('medivocab_mastered') || '[]')
     return Array.isArray(saved)
-      ? [...new Set(saved.filter((id) => validIds.has(id)))]
+      ? [...new Set(saved.filter((id) => Number.isInteger(id)))]
       : []
   } catch {
     return []
@@ -49,17 +57,25 @@ watch(
   { deep: true },
 )
 function toggleMastered(id) {
-  if (!validIds.has(id)) return
-  masteredIds.value = masteredIds.value.includes(id)
-    ? masteredIds.value.filter((saved) => saved !== id)
-    : [...masteredIds.value, id]
+  if (!validIds.value.has(id)) return
+  const mastered = !masteredIds.value.includes(id)
+  masteredIds.value = mastered
+    ? [...masteredIds.value, id]
+    : masteredIds.value.filter((saved) => saved !== id)
+
+  if (currentUser.value) {
+    learningApi.setMastered(id, mastered).catch(() => {
+      storageMessage.value =
+        'Tiến độ đã được giữ trên thiết bị này, nhưng chưa thể đồng bộ lên tài khoản.'
+    })
+  }
 }
 
 // Keep word arrays stable when mastery changes so an active deck is not restarted.
-const groupedLessons = buildLessons(wordsData)
+const groupedLessons = computed(() => buildLessons(sourceLessons.value))
 const lessons = computed(() => {
   const mastered = new Set(masteredIds.value)
-  return groupedLessons.map((lesson) => {
+  return groupedLessons.value.map((lesson) => {
     const masteredCount = lesson.words.filter((word) => mastered.has(word.id)).length
     return {
       ...lesson,
@@ -76,10 +92,10 @@ const allLesson = computed(() => {
     english: 'Medical & healthcare English',
     description:
       'Ôn luyện trọn bộ từ vựng tiếng Anh trong một buổi học.',
-    words: wordsData,
+    words: wordsData.value,
     masteredCount: masteredIds.value.length,
-    progress: wordsData.length
-      ? Math.round((masteredIds.value.length / wordsData.length) * 100)
+    progress: wordsData.value.length
+      ? Math.round((masteredIds.value.length / wordsData.value.length) * 100)
       : 0,
     color: 'violet',
     icon: 'book',
@@ -106,6 +122,8 @@ function readRoute() {
     'flashcard',
     'quiz',
     'list',
+    'login',
+    'register',
   ].includes(view)
     ? view
     : 'home'
@@ -178,6 +196,9 @@ const activeNavigation = computed(() =>
 const isSession = computed(() =>
   ['flashcard', 'quiz'].includes(route.value.view),
 )
+const isAuthView = computed(() =>
+  ['login', 'register'].includes(route.value.view),
+)
 const pageLabel = computed(
   () =>
     ({
@@ -187,6 +208,8 @@ const pageLabel = computed(
       flashcard: 'Luyện tập flashcards',
       quiz: 'Thử sức trắc nghiệm',
       list: 'Thư viện từ vựng',
+      login: 'Đăng nhập',
+      register: 'Đăng ký',
     })[route.value.view],
 )
 function navigate(view) {
@@ -194,6 +217,10 @@ function navigate(view) {
   window.location.hash = ['flashcard', 'quiz'].includes(view)
     ? `lesson/${lessonId}/${view}`
     : view
+}
+function navigateAuth(view) {
+  authError.value = ''
+  window.location.hash = view
 }
 function selectLesson(id) {
   window.location.hash = `lesson/${id}/flashcard`
@@ -213,6 +240,7 @@ function changeStudyMode() {
 }
 function syncRoute() {
   route.value = readRoute()
+  authError.value = ''
   window.speechSynthesis?.cancel()
   nextTick(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
@@ -221,12 +249,108 @@ function syncRoute() {
       mainContent.value?.focus({ preventScroll: true })
   })
 }
-onMounted(() => window.addEventListener('hashchange', syncRoute))
+
+async function loadContent() {
+  contentLoading.value = true
+  contentError.value = ''
+  try {
+    const content = await learningApi.getContent()
+    sourceLessons.value = Array.isArray(content?.lessons) ? content.lessons : []
+    masteredIds.value = masteredIds.value.filter((id) => validIds.value.has(id))
+  } catch {
+    contentError.value =
+      'Chưa thể tải dữ liệu bài học từ máy chủ. Hãy kiểm tra backend và thử lại.'
+  } finally {
+    contentLoading.value = false
+  }
+}
+
+async function hydrateAuthenticatedUser() {
+  const user = await authApi.me()
+  currentUser.value = user
+  try {
+    const progress = await learningApi.importProgress(masteredIds.value)
+    masteredIds.value = (progress?.masteredWordIds || []).filter((id) =>
+      validIds.value.has(id),
+    )
+    storageMessage.value = ''
+  } catch {
+    storageMessage.value =
+      'Bạn đã đăng nhập, nhưng tiến độ hiện chỉ được giữ trên thiết bị này.'
+  }
+}
+
+async function restoreSession() {
+  if (!getAuthSession()) return
+  try {
+    await hydrateAuthenticatedUser()
+  } catch {
+    clearAuthSession()
+    currentUser.value = null
+  }
+}
+
+function friendlyAuthError(error, mode) {
+  if (error?.status === 401)
+    return 'Email hoặc mật khẩu chưa đúng. Bạn hãy kiểm tra và thử lại.'
+  if (error?.status === 400) {
+    const rawMessage = error.message || ''
+    if (/duplicate|already|taken/i.test(rawMessage))
+      return 'Email này đã được sử dụng. Bạn có thể chuyển sang đăng nhập.'
+    if (/password/i.test(rawMessage))
+      return 'Mật khẩu chưa đáp ứng yêu cầu bảo mật. Hãy dùng ít nhất 6 ký tự và thêm chữ hoa, chữ thường hoặc số.'
+  }
+  return mode === 'register'
+    ? 'Chưa thể tạo tài khoản lúc này. Vui lòng thử lại.'
+    : 'Chưa thể đăng nhập lúc này. Vui lòng thử lại.'
+}
+
+async function handleAuthSubmit(credentials) {
+  authBusy.value = true
+  authError.value = ''
+  const mode = route.value.view
+  try {
+    await (mode === 'register'
+      ? authApi.register(credentials)
+      : authApi.login(credentials))
+    await hydrateAuthenticatedUser()
+    window.location.hash = 'home'
+  } catch (error) {
+    authError.value = friendlyAuthError(error, mode)
+  } finally {
+    authBusy.value = false
+  }
+}
+
+async function logout() {
+  currentUser.value = null
+  await authApi.logout()
+  storageMessage.value =
+    'Bạn đã đăng xuất. Tiến độ vẫn được giữ trên thiết bị này.'
+}
+
+onMounted(async () => {
+  window.addEventListener('hashchange', syncRoute)
+  await loadContent()
+  await restoreSession()
+})
 onUnmounted(() => window.removeEventListener('hashchange', syncRoute))
 </script>
 
 <template>
-  <div class="app-layout">
+  <div v-if="isAuthView" class="auth-layout">
+    <div class="ambient-background" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+    <AuthPage
+      :mode="route.view"
+      :busy="authBusy"
+      :server-error="authError"
+      @submit="handleAuthSubmit"
+      @navigate="navigateAuth"
+    />
+  </div>
+  <div v-else class="app-layout">
     <a
       class="skip-link"
       href="#main-content"
@@ -241,7 +365,10 @@ onUnmounted(() => window.removeEventListener('hashchange', syncRoute))
       :current-mode="activeNavigation"
       :mastered-count="masteredIds.length"
       :total-words="wordsData.length"
+      :user="currentUser"
       @change-mode="navigate"
+      @login="navigateAuth('login')"
+      @logout="logout"
     />
     <div class="workspace" :class="{ studying: isSession }">
       <header class="workspace-header">
@@ -261,8 +388,21 @@ onUnmounted(() => window.removeEventListener('hashchange', syncRoute))
         <p v-if="storageMessage" class="storage-message" role="status">
           {{ storageMessage }}
         </p>
+        <section v-if="contentLoading" class="content-state clay-card" aria-live="polite">
+          <span class="state-spinner" aria-hidden="true"></span>
+          <h1>Đang mở góc học tập…</h1>
+          <p>MyHoa đang lấy bài học và từ vựng từ cơ sở dữ liệu.</p>
+        </section>
+        <section v-else-if="contentError" class="content-state clay-card" role="alert">
+          <span class="clay-orb pink"><AppIcon name="alert" :size="26" /></span>
+          <h1>Chưa tải được bài học</h1>
+          <p>{{ contentError }}</p>
+          <button class="btn btn-primary" type="button" @click="loadContent">
+            <AppIcon name="arrow" :size="18" />Thử lại
+          </button>
+        </section>
         <LearningDashboard
-          v-if="route.view === 'home' || route.view === 'lessons'"
+          v-else-if="route.view === 'home' || route.view === 'lessons'"
           :lessons="lessons"
           :total-words="wordsData.length"
           :mastered-count="masteredIds.length"
@@ -353,6 +493,10 @@ onUnmounted(() => window.removeEventListener('hashchange', syncRoute))
 
 <style scoped>
 .app-layout {
+  min-height: 100vh;
+  isolation: isolate;
+}
+.auth-layout {
   min-height: 100vh;
   isolation: isolate;
 }
@@ -477,6 +621,38 @@ onUnmounted(() => window.removeEventListener('hashchange', syncRoute))
   border-radius: 20px;
   margin-bottom: 20px;
   font-size: 0.8rem;
+}
+.content-state {
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 45px 24px;
+  text-align: center;
+}
+.content-state h1 {
+  font-size: 1.55rem;
+}
+.content-state p {
+  max-width: 530px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+.content-state .btn {
+  margin-top: 8px;
+}
+.state-spinner {
+  width: 46px;
+  height: 46px;
+  border: 4px solid #ded4ec;
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: state-spin 0.75s linear infinite;
+}
+@keyframes state-spin {
+  to { transform: rotate(360deg); }
 }
 .skip-link {
   position: fixed;

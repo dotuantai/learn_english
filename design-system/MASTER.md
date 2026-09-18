@@ -40,9 +40,12 @@ The previous four topic groups are merged into `lesson-1`. With a single lesson,
 - `FlashcardDirection.vue`: shared flashcard direction selector; `src/utils/flashcardAnswers.js` handles answer matching in both directions.
 - `WordTypeSelector.vue`: lesson-scoped word type choices; `src/utils/typeFilter.js` shares labels and classification with the library.
 - `App.vue`: navigation, selected session settings and saved mastery.
-- `src/data/lessons.js`: lesson definitions, explicit word membership and derived progress.
+- Backend `GET /api/learning`: source of truth for lesson definitions and vocabulary; EF migrations own the imported seed data.
 - Existing learning mode components retain answer checking, audio, review, filters and scoring.
+- `AuthPage.vue`: shared login/register flow using the same clay tokens, visible labels, inline validation, password visibility and responsive split layout.
+- `src/services/api.js`: learning API, JWT session, token refresh and progress synchronization.
+- `src/utils/lessons.js`: derives lesson progress from API records without owning content data.
 
 ## Verification
 
-`npm run build` builds production assets. `npm test` runs Playwright on Chrome with isolated browser contexts. Tests exercise lesson coverage, flashcard completion and repeated mistakes, saved mastery, all quiz types, retry scoring, library filters and layouts at 375/768/1024/1440px. Speech is intercepted in tests to verify invocation without playing audio.
+`npm run build` builds production assets. `npm test` runs Playwright on Chrome with isolated browser contexts and a test-only API fixture. Tests exercise authentication, API-backed lesson coverage, flashcard completion and repeated mistakes, saved mastery, all quiz types, retry scoring, library filters and responsive layouts. Speech is intercepted in tests to verify invocation without playing audio.

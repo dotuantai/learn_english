@@ -1,13 +1,11 @@
 import { test, expect } from '@playwright/test'
-import { readFileSync } from 'node:fs'
-import { buildLessons } from '../src/data/lessons.js'
+import { buildLessons } from '../src/utils/lessons.js'
 import { matchesTypeFilter } from '../src/utils/typeFilter.js'
+import { learningContent, words } from './fixtures/learningContent.js'
 
-const rawWords = JSON.parse(
-  readFileSync(new URL('../src/data/words.json', import.meta.url), 'utf8'),
-)
-const words = Array.isArray(rawWords) ? rawWords : Object.values(rawWords).flat()
-const lesson1Words = buildLessons(words).find((l) => l.id === 'lesson-1').words
+const lesson1Words = buildLessons(learningContent.lessons).find(
+  (lesson) => lesson.id === 'lesson-1',
+).words
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -27,7 +25,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('every vocabulary entry belongs to one lesson and mastery stays scoped', () => {
-  const lessons = buildLessons(words, [1, 31])
+  const lessons = buildLessons(learningContent.lessons, [1, 31])
   const ids = lessons.flatMap((lesson) => lesson.words.map((word) => word.id))
   expect(ids.sort((a, b) => a - b)).toEqual(
     words.map((word) => word.id).sort((a, b) => a - b),

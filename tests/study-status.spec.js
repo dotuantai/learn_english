@@ -1,12 +1,8 @@
 import { test, expect } from '@playwright/test'
-import { readFileSync } from 'node:fs'
-import { buildLessons } from '../src/data/lessons.js'
+import { buildLessons } from '../src/utils/lessons.js'
+import { learningContent } from './fixtures/learningContent.js'
 
-const rawWords = JSON.parse(
-  readFileSync(new URL('../src/data/words.json', import.meta.url), 'utf8'),
-)
-const words = Array.isArray(rawWords) ? rawWords : Object.values(rawWords).flat()
-const lessonWords = buildLessons(words).find(
+const lessonWords = buildLessons(learningContent.lessons).find(
   (lesson) => lesson.id === 'lesson-1',
 ).words
 const masteredWords = lessonWords.slice(0, 3)
