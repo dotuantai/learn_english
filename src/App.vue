@@ -31,43 +31,29 @@ const currentUser = ref(null)
 const authBusy = ref(false)
 const authError = ref('')
 
-function loadMastered() {
-  try {
-    const saved = JSON.parse(localStorage.getItem('medivocab_mastered') || '[]')
-    return Array.isArray(saved)
-      ? [...new Set(saved.filter((id) => Number.isInteger(id)))]
-      : []
-  } catch {
-    return []
-  }
-}
-const masteredIds = ref(loadMastered())
+const masteredIds = ref([])
 const storageMessage = ref('')
-watch(
-  masteredIds,
-  (ids) => {
-    try {
-      localStorage.setItem('medivocab_mastered', JSON.stringify(ids))
-      storageMessage.value = ''
-    } catch {
-      storageMessage.value =
-        'Tiến độ vẫn được giữ trong phiên này. Trình duyệt hiện chưa cho phép lưu để dùng lần sau.'
-    }
-  },
-  { deep: true },
-)
-function toggleMastered(id) {
+
+async function toggleMastered(id) {
   if (!validIds.value.has(id)) return
+  if (!currentUser.value) {
+    storageMessage.value = 'Vui lòng đăng nhập để lưu từ đã thuộc vào tài khoản.'
+    return
+  }
+
   const mastered = !masteredIds.value.includes(id)
   masteredIds.value = mastered
     ? [...masteredIds.value, id]
     : masteredIds.value.filter((saved) => saved !== id)
 
-  if (currentUser.value) {
-    learningApi.setMastered(id, mastered).catch(() => {
-      storageMessage.value =
-        'Tiến độ đã được giữ trên thiết bị này, nhưng chưa thể đồng bộ lên tài khoản.'
-    })
+  try {
+    await learningApi.setMastered(id, mastered)
+    storageMessage.value = ''
+  } catch {
+    masteredIds.value = mastered
+      ? masteredIds.value.filter((saved) => saved !== id)
+      : [...masteredIds.value, id]
+    storageMessage.value = 'Chưa thể đồng bộ tiến độ lên máy chủ. Vui lòng thử lại.'
   }
 }
 
@@ -256,7 +242,6 @@ async function loadContent() {
   try {
     const content = await learningApi.getContent()
     sourceLessons.value = Array.isArray(content?.lessons) ? content.lessons : []
-    masteredIds.value = masteredIds.value.filter((id) => validIds.value.has(id))
   } catch {
     contentError.value =
       'Chưa thể tải dữ liệu bài học từ máy chủ. Hãy kiểm tra backend và thử lại.'
@@ -269,14 +254,14 @@ async function hydrateAuthenticatedUser() {
   const user = await authApi.me()
   currentUser.value = user
   try {
-    const progress = await learningApi.importProgress(masteredIds.value)
+    const progress = await learningApi.getProgress()
     masteredIds.value = (progress?.masteredWordIds || []).filter((id) =>
       validIds.value.has(id),
     )
     storageMessage.value = ''
   } catch {
     storageMessage.value =
-      'Bạn đã đăng nhập, nhưng tiến độ hiện chỉ được giữ trên thiết bị này.'
+      'Không thể tải tiến độ học tập từ máy chủ.'
   }
 }
 
@@ -324,12 +309,13 @@ async function handleAuthSubmit(credentials) {
 
 async function logout() {
   currentUser.value = null
+  masteredIds.value = []
   await authApi.logout()
-  storageMessage.value =
-    'Bạn đã đăng xuất. Tiến độ vẫn được giữ trên thiết bị này.'
+  storageMessage.value = ''
 }
 
 onMounted(async () => {
+  localStorage.removeItem('medivocab_mastered')
   window.addEventListener('hashchange', syncRoute)
   await loadContent()
   await restoreSession()
