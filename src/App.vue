@@ -11,6 +11,7 @@ import {
 
 import Navbar from './components/Navbar.vue'
 import AppIcon from './components/AppIcon.vue'
+import AppToast from './components/AppToast.vue'
 import AuthPage from './components/AuthPage.vue'
 import LearningDashboard from './components/LearningDashboard.vue'
 import LessonDetail from './components/LessonDetail.vue'
@@ -32,12 +33,53 @@ const authBusy = ref(false)
 const authError = ref('')
 
 const masteredIds = ref([])
-const storageMessage = ref('')
+const appToast = ref(null)
+const TOAST_DURATION = 5000
+let toastDismissTimer
+let toastId = 0
+
+function dismissToast() {
+  clearTimeout(toastDismissTimer)
+  toastDismissTimer = undefined
+  appToast.value = null
+}
+
+function showToast(notification = {}) {
+  const message = String(notification.message || '').trim()
+  if (!message) return
+
+  clearTimeout(toastDismissTimer)
+  appToast.value = {
+    id: ++toastId,
+    message,
+    title: notification.title || '',
+    tone: notification.tone || 'info',
+    action: notification.action || '',
+    actionLabel: notification.actionLabel || '',
+  }
+
+  toastDismissTimer = window.setTimeout(() => {
+    appToast.value = null
+    toastDismissTimer = undefined
+  }, TOAST_DURATION)
+}
+
+function handleToastAction() {
+  const action = appToast.value?.action
+  dismissToast()
+  if (action === 'login') navigateAuth('login')
+}
 
 async function toggleMastered(id) {
   if (!validIds.value.has(id)) return
   if (!currentUser.value) {
-    storageMessage.value = 'Vui lòng đăng nhập để lưu từ đã thuộc vào tài khoản.'
+    showToast({
+      title: 'Cần đăng nhập',
+      message: 'Vui lòng đăng nhập để lưu từ đã thuộc vào tài khoản.',
+      tone: 'warning',
+      action: 'login',
+      actionLabel: 'Đăng nhập',
+    })
     return
   }
 
@@ -48,12 +90,14 @@ async function toggleMastered(id) {
 
   try {
     await learningApi.setMastered(id, mastered)
-    storageMessage.value = ''
   } catch {
     masteredIds.value = mastered
       ? masteredIds.value.filter((saved) => saved !== id)
       : [...masteredIds.value, id]
-    storageMessage.value = 'Chưa thể đồng bộ tiến độ lên máy chủ. Vui lòng thử lại.'
+    showToast({
+      message: 'Chưa thể đồng bộ tiến độ lên máy chủ. Vui lòng thử lại.',
+      tone: 'error',
+    })
   }
 }
 
@@ -258,10 +302,11 @@ async function hydrateAuthenticatedUser() {
     masteredIds.value = (progress?.masteredWordIds || []).filter((id) =>
       validIds.value.has(id),
     )
-    storageMessage.value = ''
   } catch {
-    storageMessage.value =
-      'Không thể tải tiến độ học tập từ máy chủ.'
+    showToast({
+      message: 'Không thể tải tiến độ học tập từ máy chủ.',
+      tone: 'error',
+    })
   }
 }
 
@@ -311,7 +356,7 @@ async function logout() {
   currentUser.value = null
   masteredIds.value = []
   await authApi.logout()
-  storageMessage.value = ''
+  dismissToast()
 }
 
 onMounted(async () => {
@@ -320,10 +365,18 @@ onMounted(async () => {
   await loadContent()
   await restoreSession()
 })
-onUnmounted(() => window.removeEventListener('hashchange', syncRoute))
+onUnmounted(() => {
+  clearTimeout(toastDismissTimer)
+  window.removeEventListener('hashchange', syncRoute)
+})
 </script>
 
 <template>
+  <AppToast
+    :toast="appToast"
+    @action="handleToastAction"
+    @close="dismissToast"
+  />
   <div v-if="isAuthView" class="auth-layout">
     <div class="ambient-background" aria-hidden="true">
       <span></span><span></span><span></span>
@@ -371,9 +424,6 @@ onUnmounted(() => window.removeEventListener('hashchange', syncRoute))
         class="main-content"
         tabindex="-1"
       >
-        <p v-if="storageMessage" class="storage-message" role="status">
-          {{ storageMessage }}
-        </p>
         <section v-if="contentLoading" class="content-state clay-card" aria-live="polite">
           <span class="state-spinner" aria-hidden="true"></span>
           <h1>Đang mở góc học tập…</h1>
@@ -599,14 +649,6 @@ onUnmounted(() => window.removeEventListener('hashchange', syncRoute))
 }
 .change-lesson {
   margin-left: auto;
-}
-.storage-message {
-  padding: 14px 20px;
-  color: var(--warning);
-  background: var(--warning-bg);
-  border-radius: 20px;
-  margin-bottom: 20px;
-  font-size: 0.8rem;
 }
 .content-state {
   min-height: 420px;
